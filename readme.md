@@ -9,4 +9,13 @@ WHO-UNICEF routine immunistaion coverage
 WHO campaign data
 
 - Private/trusted sources:
+Gavi
+Modelling groups
 
+## Input
+
+- Internal input
+Montagu database
+
+- External input
+User defined input following montagu conventions
