@@ -1,0 +1,39 @@
+Package: vacsce
+Title: Vaccine coverage scenario generator
+Version: 0.1.0
+Authors@R:
+    c(person(given = "Xiang",
+             family = "Li",
+             role = c("aut", "cre"),
+             email = "x.li@imperial.ac.uk"),
+      person("Imperial College of Science, Technology and Medicine",
+             role = "postdoc"))
+Description: VIMC COVERAGE SCENARIO GENERATION PACKAGE. This package is mainly for the VIMC Science Team to generate various coverage scenarios.
+Depends: R (>= 3.5.0)
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports:
+    DBI,
+    dbplyr,
+    dplyr,
+    glue,
+    magrittr,
+    rlang,
+    RPostgres,
+    vaultr
+Suggests:
+    fakerbase,
+    ggplot2,
+    htmltools,
+    knitr,
+    mockery,
+    mockr,
+    testthat,
+    retry,
+    rmarkdown,
+    RSQLite,
+    withr
+Remotes: reside-ic/fakerbase
+RoxygenNote: 7.2.1
+VignetteBuilder: knitr
+Config/testthat/edition: 3
