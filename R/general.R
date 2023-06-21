@@ -23,3 +23,6 @@ vac_proj <- function(){
 
 }
 
+## sanity checks
+## what to check?
+## continuity, range, trend, pop, age, etc
