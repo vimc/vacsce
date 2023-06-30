@@ -129,7 +129,9 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95){
     merge(data.frame(year = year_from:year_to)) %>%
     mutate(coverage = coverage + step*(year - y)) %>%
     bind_rows(d) %>%
-    arrange(year) %>%
+    arrange(year)
+  cap = max(c(cap, max(t$coverage))) # cap at specified or historical highest
+  t <- t %>%
     mutate(coverage = ifelse(coverage > cap, cap, coverage))
   return(t)
 }
@@ -161,6 +163,29 @@ non_linear_scale_up <- function(d, year_from, year_to, endpoint){
   return(dat)
 }
 
+## rule e.) projection rule mr follow-up campaigns
+sia_follow_up <- function(d, vaccine_base, year_current){
+  ## vaccine_base is a baseline vaccine for evaluating follow-up campain frequency
+  ## evaluate mcv1 levels from a baseline year
+  ## baseline year is determined by year_intro, year_current, and last_sia_year
+  ## if no historical sia, baseline_year = year_current or future_year_intro if applicable
+  ## if last_sia_year > year_current-4, baseline_year = last_sia_year or future_year_intro if applicable
+  ## otherwise baseline_year = year_current
+
+  ## sia frequency
+  ## every 2 years if mcv1 level is < 60%
+  ## every 3 years if mcv1 level is 60 - 80%
+  ## every 4 years if mcv1 level is >= 80%
+  ## if projected sia didn't happen, i.e. not recorded as a historical sia, postpone to year_current+1
+
+}
+
+sia_catch_up <- function(d, year_intro, age_group_default){
+  ## this is relevant to MenA, Typhoid, and HPV mult-cohort SIAs before routine introduction
+  ## we need are year_intro and age groups
+  ## if previously SIAs happende, only target missed cohorts
+}
+## rule f.) projection rule for
 ## ia2030 non-linear function
 IA2030_projection <- function(t0, c0, T, cT){
   ## per country, per vaccine
