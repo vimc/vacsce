@@ -7,6 +7,7 @@
 input_check <- function(input){
   ## input is a list of objects
   ## need meaningful checks to avoid errors
+  message("Always specify campaign in introduction as the last entry! - todo: make this identifiable")
   country <- unique(input$params$country)
   disease <- unique(input$params$disease)
   year_cur <- unique(input$params$year_cur)
@@ -76,7 +77,7 @@ vac_sce <- function(input){
 
   x <- nrow(input$introduction)
 
-  dat <- list(NULL)
+  dat <- NULL
   for(i in seq_len(x)){
     # for each vaccine delivery do scenario projection
     print(sprintf("projecting trajectory for %s %s", input$introduction$activity_type[i], input$introduction$vaccine[i]))
@@ -90,21 +91,36 @@ vac_sce <- function(input){
       arrange(year)
     r <- input$proj_rul[[i]] # projection rules
 
-    if(!is.null(r)){
+    if(!is.null(r) & input$introduction$activity_type[i] != "campaign"){
+      ## this is routine projection only
+      ## campaign may depend on routine projection
+      ## hence need to be run separately
       for(j in seq_len(length(r))){
-        func <- paste0(names(r[j]), sub("list\\(", "(d, ",paste(r[j])))
+        func <- paste0(names(r[j]), sub("list\\(", "(d, ", paste(r[j])))
         print(func)
         d <- eval(parse(text = func))
       }
-      dat[[i]] <- d %>% bind_cols(input$introduction[i, c("vaccine", "activity_type")])
-    } else{
+      dat <- bind_rows(dat, d %>% bind_cols(input$introduction[i, c("vaccine", "activity_type")]))
+    } else if(is.null(r)){
       print("No projection. Binding data from source coverage.")
-      dat[[i]] <- bind_rows(d0, d1)
+      dat <- bind_rows(dat, d0, d1)
+    } else {
+      ## campaign projection
+      for(j in seq_len(length(r))){
+        func <- paste0(names(r[j]), sub("list\\(", "(d, dat, ", paste(r[j])))
+        func <- gsub('\"', "'", func, fixed = TRUE)
+        print(func)
+        dat <- eval(parse(text = func)) %>%
+          merge(input$introduction[i, c("vaccine", "activity_type")]) %>%
+          bind_rows(dat)
+      }
     }
   }
-  dat <- do.call(bind_rows, dat) %>%
+  dat <- dat %>%
     mutate(country = input$params$country,
            disease = input$params$disease)
+
+  ##
 }
 
 ## projection rules
@@ -163,27 +179,86 @@ non_linear_scale_up <- function(d, year_from, year_to, endpoint){
   return(dat)
 }
 
-## rule e.) projection rule mr follow-up campaigns
-sia_follow_up <- function(d, vaccine_base, year_current){
-  ## vaccine_base is a baseline vaccine for evaluating follow-up campain frequency
-  ## evaluate mcv1 levels from a baseline year
+## rule e.) projection rule for follow-up campaigns
+## depending on the most recent campaign, and routine introduction data and routine coverage level of vaccine_base,
+## project future follow-up campaign
+## this function is designed under WHO M/MR guidance
+## if this is also to be used for other diseases, may need to adjust according to relevant guidance
+## d consists of
+sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back = 4, sia_level = 0.9){
+  ## vaccine_base is a baseline vaccine for evaluating follow-up campaign frequency
+  ## evaluate vaccine_base levels from a baseline year
   ## baseline year is determined by year_intro, year_current, and last_sia_year
   ## if no historical sia, baseline_year = year_current or future_year_intro if applicable
-  ## if last_sia_year > year_current-4, baseline_year = last_sia_year or future_year_intro if applicable
+  ## if last_sia_year < year_current-look_back, baseline_year = year_current or future_year_intro if applicable
+  ## if last_sia_year > year_current-look_back & year_intro <= last_sia_year, baseline_year = last_sia_year
+  ## if last_sia_year > year_current-look_back & year_intro > last_sia_year, baseline_year = year_intro
+
   ## otherwise baseline_year = year_current
 
-  ## sia frequency
+  ## MR follow-up sia frequency
   ## every 2 years if mcv1 level is < 60%
   ## every 3 years if mcv1 level is 60 - 80%
   ## every 4 years if mcv1 level is >= 80%
-  ## if projected sia didn't happen, i.e. not recorded as a historical sia, postpone to year_current+1
+  ## N.B. if projected sia didn't happen, i.e. not recorded as a historical sia, postpone to year_current+1
 
+  ## determine baseline year
+  b <- dat[dat$vaccine == vaccine_base, ]
+  y_int <- min(b$year)
+  y_current <- year_current
+
+  if(nrow(d) == 0L){
+    y_base <- max(y_int, y_current)
+  } else {
+    y_last_sia <- max(d$year)
+    if(y_last_sia < y_current - look_back){
+      y_base <- max(y_int, y_current)
+    } else if(y_last_sia > y_current - look_back & y_last_sia >= y_int){
+      y_base <- y_last_sia
+    } else {
+      y_base <- y_int
+    }
+  }
+
+  ## project future campaigns from y_base to year_to
+  i <- y_base
+  t <- NULL
+  while (i < year_to) {
+    ## evaluate vaccine_base, and determine next sia year
+    if(b$coverage[b$year == i] < 0.6){
+      i <- i + 2
+    } else if(b$coverage[b$year == i] >= 0.8){
+      i <- i + 4
+    } else {
+      i <- i +3
+    }
+    if (i < y_current){
+      i <- y_current + 1
+    }
+    t <- c(t, i)
+  }
+  t <- data.frame(year = t,
+             coverage = sia_level,
+             age_from = 1,
+             age_to = 5)
+
+  return(bind_rows(d, t))
 }
 
-sia_catch_up <- function(d, year_intro, age_group_default){
+sia_catch_up <- function(d, year_intro, year_current, age_from, age_to){
   ## this is relevant to MenA, Typhoid, and HPV mult-cohort SIAs before routine introduction
   ## we need are year_intro and age groups
-  ## if previously SIAs happende, only target missed cohorts
+  ## if previously SIAs happened, only target missed cohorts
+
+  ## find most recent sia year
+  if(year_current > year_intro) {
+    skip
+  } else {
+    if(nrow(d) == 0L){
+
+    }
+  }
+
 }
 ## rule f.) projection rule for
 ## ia2030 non-linear function

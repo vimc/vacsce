@@ -61,6 +61,20 @@ proj_rules = list(
   rule3 = NULL ## currently not projecting campaigns # rule 3 for campaign - campaign projection rules under development
 )
 
+## example 4 - mcv1 historical + non-linear scale-up; manually defined future intro + various rules; db sia for past and future projection
+## this has to be two-steps, as campaign projection depends on routine projections
+params <- list(country = "GIN",
+               disease = "Measles",
+               year_cur = 2021,
+               introduction = data.frame(vaccine = c("MCV1", "MCV2", "Measles"),
+                                         activity_type = c("routine", "routine", "campaign"),
+                                         year_intro = c(NA, 2024, NA)))
+proj_rules = list(
+  rule1 = list(non_linear_scale_up = list(year_from = 2022, year_to = 2030, endpoint = 0.99)), # rule 1 for mcv1
+  rule2 = list(catch_up_with_x = list(year_from = 2024, year_to = 2027, vaccine_x_level = 0.7), # rule 2 for mcv2
+               non_linear_scale_up = list(year_from = 2028, year_to = 2030, endpoint = 0.95)),
+  rule3 = list(sia_follow_up = list(vaccine_base = "MCV1", year_current = 2021, year_to = 2030)) ## rule 3 for campaign
+)
 
 ## excute the following for each example
 input <- list(params = params,
