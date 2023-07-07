@@ -19,32 +19,58 @@ input_check <- function(input){
   ## filter data
   his <-  input$src$historic %>%
     filter(country == !!country) %>%
-    right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))
+    right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type")) %>%
+    filter(!is.na(year))
 
   fut <-  input$src$future %>%
     filter(country == !!country) %>%
-    right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))
+    right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))%>%
+    filter(!is.na(year))
 
   ## check introduction
   ## merge data source and user specified introduction dates
-  s <- his %>% group_by(vaccine, activity_type) %>%
-    filter(activity_type != "campaign") %>%
-    summarise(year_intro_db = min(year), .groups = "keep") %>%
-    as.data.frame() %>%
-    right_join(introduction, by = c("vaccine", "activity_type")) %>%
-    mutate(conflict = (!is.na(year_intro) & !is.na(year_intro_db) & year_intro != year_intro_db))
-  if (any(s$conflict)){
-    message("conflict in introduction assumption")
-    message("you may want to act as external user making up hypothetic historical coverage other than actual?")
-    stop(print(s))
+  if (nrow(his) > 0){
+    s <- his %>% group_by(vaccine, activity_type) %>%
+      filter(activity_type != "campaign") %>%
+      summarise(year_intro_db = min(year), .groups = "keep") %>%
+      as.data.frame() %>%
+      right_join(introduction, by = c("vaccine", "activity_type")) %>%
+      mutate(conflict = (!is.na(year_intro) & !is.na(year_intro_db) & year_intro != year_intro_db))
+    if (any(s$conflict)){
+      message("conflict in introduction assumption")
+      message("you may want to act as external user making up hypothetic historical coverage other than actual?")
+      stop(print(s))
+    }
+
+    input$introduction <- s %>%
+      mutate(year_intro = ifelse(is.na(year_intro), year_intro_db, year_intro)) %>%
+      select(vaccine, activity_type, year_intro) %>%
+      mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur)
+    input$his <- his %>% right_join(input$introduction %>% filter(!future_introduction), by = join_by("vaccine", "activity_type")) %>%
+      select(-year_intro, - future_introduction) <- his %>% group_by(vaccine, activity_type) %>%
+      filter(activity_type != "campaign") %>%
+      summarise(year_intro_db = min(year), .groups = "keep") %>%
+      as.data.frame() %>%
+      right_join(introduction, by = c("vaccine", "activity_type")) %>%
+      mutate(conflict = (!is.na(year_intro) & !is.na(year_intro_db) & year_intro != year_intro_db))
+    if (any(s$conflict)){
+      message("conflict in introduction assumption")
+      message("you may want to act as external user making up hypothetic historical coverage other than actual?")
+      stop(print(s))
+    }
+
+    input$introduction <- s %>%
+      mutate(year_intro = ifelse(is.na(year_intro), year_intro_db, year_intro)) %>%
+      select(vaccine, activity_type, year_intro) %>%
+      mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur)
+    input$his <- his %>% right_join(input$introduction %>% filter(!future_introduction), by = join_by("vaccine", "activity_type")) %>%
+      select(-year_intro, - future_introduction)
+  } else {
+    input$his <- his
+    input$introduction <- input$params$introduction
+    print("No historical data identified.")
   }
 
-  input$introduction <- s %>%
-    mutate(year_intro = ifelse(is.na(year_intro), year_intro_db, year_intro)) %>%
-    select(vaccine, activity_type, year_intro) %>%
-    mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur)
-  input$his <- his %>% right_join(input$introduction %>% filter(!future_introduction), by = join_by("vaccine", "activity_type")) %>%
-    select(-year_intro, - future_introduction)
   input$fut <- fut # future coverage is used for each delivery if no corresponding projection rule(s) specified
   message("Further expand if activity_types other than routine and campaign, e.g. routine_intensified")
 
@@ -74,7 +100,6 @@ input_check <- function(input){
 vac_sce <- function(input){
   his <- input$his
   fut <- input$fut
-
   x <- nrow(input$introduction)
 
   dat <- NULL
@@ -120,7 +145,7 @@ vac_sce <- function(input){
     mutate(country = input$params$country,
            disease = input$params$disease)
 
-  ##
+  return(dat)
 }
 
 ## projection rules
@@ -185,7 +210,7 @@ non_linear_scale_up <- function(d, year_from, year_to, endpoint){
 ## this function is designed under WHO M/MR guidance
 ## if this is also to be used for other diseases, may need to adjust according to relevant guidance
 ## d consists of
-sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back = 4, sia_level = 0.9){
+sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5){
   ## vaccine_base is a baseline vaccine for evaluating follow-up campaign frequency
   ## evaluate vaccine_base levels from a baseline year
   ## baseline year is determined by year_intro, year_current, and last_sia_year
@@ -238,29 +263,63 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
     t <- c(t, i)
   }
   t <- data.frame(year = t,
-             coverage = sia_level,
-             age_from = 1,
-             age_to = 5)
+                  coverage = sia_level,
+                  age_from = age_from,
+                  age_to = age_to)
 
   return(bind_rows(d, t))
 }
 
-sia_catch_up <- function(d, year_intro, year_current, age_from, age_to){
+## rule f.) projection rule for catch-up campaigns, specifically initial catch-up and mini-catch-up that targets missing cohorts
+sia_catch_up <- function(d, dat, vaccine_base, year_current, sia_level, age_from, age_to){
   ## this is relevant to MenA, Typhoid, and HPV mult-cohort SIAs before routine introduction
   ## we need are year_intro and age groups
   ## if previously SIAs happened, only target missed cohorts
 
-  ## find most recent sia year
-  if(year_current > year_intro) {
-    skip
-  } else {
-    if(nrow(d) == 0L){
+  ## find routine intro year, there will be a campaign in this year
+  year_intro <- min(dat$year[dat$vaccine == vaccine_base])
 
-    }
+  ## any campaign in the past?
+  ## if there is one, catch-up missing cohorts, otherwise refine age_from, age_to to only these missing cohorts
+  if (nrow(d) > 0){
+    year_last_sia <- max(d$year)
+  } else {
+    year_last_sia <- 1e5
   }
 
+  if(year_last_sia < year_intro) {
+    ## catch-up missing cohorts only, if missing cohorts are eligible, i.e. between [age_from, age_to]
+    k <- year_intro - year_last_sia
+    s <- intersect(1:k, age_from:age_to)
+    if(length(s) > 0){
+      age_from <- min(s)
+      age_to <- max(s)
+      t <- data.frame(year = year_intro,
+                      coverage = sia_level,
+                      age_from = age_from,
+                      age_to = age_to)
+    } else {
+      return(NULL)
+    }
+  } else {
+    t <- data.frame(year = year_intro,
+                    coverage = sia_level,
+                    age_from = age_from,
+                    age_to = age_to)
+  }
+  return(bind_rows(d, t))
 }
-## rule f.) projection rule for
+
+## rule g.) recurrent sias, e.g. cholera
+sia_recurrent <- function(d, dat, year_from, year_to, frequency, sia_level, age_from, age_to){
+
+  t <- data.frame(year = seq(year_from, year_to, frequency),
+                  coverage = sia_level,
+                  age_from = age_from,
+                  age_to = age_to)
+  return(t)
+}
+
 ## ia2030 non-linear function
 IA2030_projection <- function(t0, c0, T, cT){
   ## per country, per vaccine
