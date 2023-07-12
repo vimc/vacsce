@@ -42,7 +42,7 @@ params <- list(country = "GIN",
 proj_rules = list(
   rule1 = list(
     non_linear_scale_up = list(year_from = 2022, year_to = 2030, endpoint = 0.99)
-    ) # rules are provided as a list of lists, each component is a projection rule name and its corresponding parameters
+  ) # rules are provided as a list of lists, each component is a projection rule name and its corresponding parameters
 )
 
 ## next example is a complex/flexible one
@@ -69,7 +69,7 @@ params <- list(country = "GIN",
                year_cur = 2021,
                introduction = data.frame(vaccine = c("MCV1", "MCV2", "Measles"),
                                          activity_type = c("routine", "routine", "campaign"),
-                                         year_intro = c(NA, 2024, NA)))
+                                         year_intro = c(2021, 2024, NA)))
 proj_rules = list(
   rule1 = list(non_linear_scale_up = list(year_from = 2022, year_to = 2030, endpoint = 0.99)), # rule 1 for mcv1
   rule2 = list(catch_up_with_x = list(year_from = 2024, year_to = 2027, vaccine_x_level = 0.7), # rule 2 for mcv2
@@ -122,3 +122,8 @@ input <- list(params = params,
 )
 input <- input_check(input) # sanity check: input structure, input parameters (any conflicts in routine introduction or projection rules, etc.)
 dat <- vac_sce(input) # coverage scenario generation
+
+# file_log <- file("log_file.txt")
+# sink(file_log, append = FALSE)
+# sink(file_log, append=TRUE, type="message")
+# sink()

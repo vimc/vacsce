@@ -60,7 +60,7 @@ for (i in seq_along(meta1$country)){
      if(params$introduction$year_intro[j] <= year_current & params$introduction$activity_type[j] == "routine"){
        n_rules[[j]] <- list(non_linear_scale_up = list(year_from = year_current+1, year_to = year_to, endpoint = 0.99))
      } else if(params$introduction$year_intro[j] > year_current & params$introduction$activity_type[j] == "routine"){
-       n_rules[[j]] <- list(catch_up_with_x = list(year_from = params$introduction$year_intro[j], year_to = params$introduction$year_intro[j]+3, vaccine_x_level = 0.7), # rule 1 for HPV routine
+       n_rules[[j]] <- list(catch_up_with_x = list(year_from = params$introduction$year_intro[j], year_to = params$introduction$year_intro[j]+3, vaccine_x_level = 0.7),
             non_linear_scale_up = list(year_from = params$introduction$year_intro[j]+4, year_to = year_to, endpoint = 0.9))
      } else {
        ## campaign rules
@@ -70,8 +70,10 @@ for (i in seq_along(meta1$country)){
          n_rules[[j]] <- list(sia_follow_up = list(vaccine_base = "MCV1", year_current = year_current, year_to = year_to, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5))
        } else if (params$disease %in% c("HPV", "Typhoid", "MenA")){
          n_rules[[j]] <- list(sia_catch_up = list(vaccine_base = "MenA", year_current = year_current, sia_level = 0.9, age_from = 1, age_to = 29))
-       } else if (params$disease == c("JE", "YF")){
+       } else if (params$disease == c("Cholera")){
          n_rules[[j]] <- list(sia_recurrent = list(year_from = year_current, year_to = year_to, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60))
+       } else if (params$disease == c("JE", "YF")){
+         n_rules[[j]] <- NULL
        }
      }
     }
