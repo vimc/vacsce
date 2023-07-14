@@ -1,0 +1,82 @@
+---
+title: "Using vacsce for vaccination coverage scenario generation"
+author: "Xiang Li"
+date: "`r Sys.Date()"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using vacsce for vaccination coverage scenario generation}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(vacsce)
+devtools::load_all("../")
+```
+
+### Introduction
+
+This vignette describes how to use *vacsce* to generate vaccination coverage scenarios. *vacsce* provides a set of coverage projection rules. Its initial objective was to document commonly used coverage projection rules and works as a tool for VIMC's model runs, interim-update and related analysis. As VIMC continues expanding its collaboration with greater community, we further plan to release *vacsce* as a tool for external users who share common interests such as planning for immunization programs, assessment of vaccine impact, etc.
+
+### Future vaccination coverage projection rules
+
+*vacsce* currently contains seven coverage projection rules: four of which are related to routine immunization and three for supplementary immunization activities (SIAs) (see *vacsce/R/projection_rules.R*). In this section, we provide details of these rules with examples.
+
+**Load example data**
+```{r}
+data <- readRDS("../inst/example_data.rds")
+his <- data$historic
+fut <- data$future
+year_cur <- max(his$year)
+```
+
+**keep_levels**
+Routine coverage projection - Future coverage level is maintained at certain constant level.
+
+```{r}
+d <- his[his$vaccine == "MCV1",]
+keep_levels(d, year_from = year_cur + 1, year_to=2030, level=d$coverage[d$year == year_cur])
+```
+
+This will return a data frame in which future coverage is maintained at the level in year_cur.
+
+
+**incremental**
+Routine coverage projection - Future coverage increase incrementally.
+
+```{r}
+incremental(d, year_from = year_cur + 1, year_to = 2030, step = 0.01, cap = 0.95)
+```
+
+**catch_up_with_x**
+
+```{r}
+d <- his[his$vaccine == "MCV2",] # zero-rows as not historical data
+catch_up_with_x(d, year_from = year_cur + 1, year_to = year_cur + 3, vaccine_x_level = 0.85, intro_level = 1/3)
+```
+**non_linear_scale_up**
+
+```{r}
+d <- his[his$vaccine == "MCV1",]
+non_linear_scale_up(d, year_from = year_cur + 1, year_to = 2030, endpoint = 0.9)
+```
+**sia_follow_up**
+
+```{r}
+d <- his[his$vaccine == "MCV1",]
+dat <- non_linear_scale_up(d, year_from = year_cur + 1, year_to = 2030, endpoint = 0.9) %>%
+  mutate(country = d$country[1], vaccine = d$vaccine[1])
+d <- his[his$vaccine == "Measles", ]
+sia_follow_up(d, dat, vaccine_base = "MCV1", year_current = year_cur, year_to = 2030, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5)
+```
+**sia_catch_up**
+
+**sia_recurrent**
+
