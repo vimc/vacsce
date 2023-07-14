@@ -15,7 +15,8 @@ sia_follow_up(
   look_back = 4,
   sia_level = 0.9,
   age_from = 1,
-  age_to = 5
+  age_to = 5,
+  gender = 1
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ sia_follow_up(
 \item{age_from}{campaign target age from}
 
 \item{age_to}{campaign target age to}
+
+\item{gender}{1 for both, 2 for males, 3 for females}
 }
 \description{
 campaign coverage projection rule - future follow-up campaigns

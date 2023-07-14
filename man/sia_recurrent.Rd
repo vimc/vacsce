@@ -12,7 +12,8 @@ sia_recurrent(
   frequency,
   sia_level,
   age_from,
-  age_to
+  age_to,
+  gender
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ sia_recurrent(
 \item{age_from}{campaign target age from}
 
 \item{age_to}{campaign target age to}
+
+\item{gender}{1 for both, 2 for males, 3 for females}
 }
 \description{
 campaign coverage projection rule - recurrent campaigns, e.g. cholera
