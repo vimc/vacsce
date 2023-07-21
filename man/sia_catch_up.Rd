@@ -4,16 +4,7 @@
 \alias{sia_catch_up}
 \title{campaign coverage projection rule - one-off catch-up campaigns, specifically initial catch-up and mini-catch-up that targets missing cohorts}
 \usage{
-sia_catch_up(
-  d,
-  dat,
-  vaccine_base,
-  year_current,
-  sia_level,
-  age_from,
-  age_to,
-  gender
-)
+sia_catch_up(d, dat, vaccine_base, sia_level, age_from, age_to, gender)
 }
 \arguments{
 \item{d}{a data frame containing at least (year, coverage)}
@@ -21,8 +12,6 @@ sia_catch_up(
 \item{dat}{data frame containing at least vaccine_base upto year_to}
 
 \item{vaccine_base}{vaccine to be dependent on}
-
-\item{year_current}{year current}
 
 \item{sia_level}{campaign coverage level}
 

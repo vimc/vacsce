@@ -27,7 +27,7 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95){
     mutate(coverage = coverage + step*(year - y)) %>%
     bind_rows(d) %>%
     arrange(year)
-  cap = max(c(cap, max(t$coverage))) # cap at specified or historical highest
+  cap <- max(c(cap, max(d$coverage))) # cap at specified or historical highest
   t <- t %>%
     mutate(coverage = ifelse(coverage > cap, cap, coverage))
   return(t)
@@ -43,6 +43,7 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95){
 catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level = 1/3){
   years <- seq(year_from, year_to, 1)
   cov <- rep(NA, length(years))
+  d <- d[is.numeric(d$year), ]
   if (nrow(d) == 0){
     ## routine introduction
     cov[1] <- vaccine_x_level*intro_level # intro at 33% of target vaccine
@@ -50,7 +51,7 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
   } else {
     ## non-linear scale-up
     message("intro_level is not used as not applicable")
-    cov <- IA2030_projection(year_from-1, d[d$year == year_from -1], year_to, vaccine_x_level)
+    cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, vaccine_x_level)
   }
   dat <- bind_rows(d, data.frame(year = years, coverage = cov))
   return(dat)
@@ -96,7 +97,7 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
   ## MR follow-up sia frequency
   ## every 2 years if mcv1 level is < 60%
   ## every 3 years if mcv1 level is 60 - 80%
-  ## every 4 years if mcv1 level is >= 80%
+  ## every 4 years if mcv1 level is >= 80% & < 95%
   ## N.B. if projected sia didn't happen, i.e. not recorded as a historical sia, postpone to year_current+1
 
   ## determine baseline year
@@ -124,7 +125,7 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
     ## evaluate vaccine_base, and determine next sia year
     if(b$coverage[b$year == i] < 0.6){
       i <- i + 2
-    } else if(b$coverage[b$year == i] >= 0.8){
+    } else if(b$coverage[b$year == i] >= 0.8 & b$coverage[b$year == i] < 0.95){
       i <- i + 4
     } else {
       i <- i +3
@@ -146,12 +147,11 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
 #' @param d a data frame containing at least (year, coverage)
 #' @param dat data frame containing at least vaccine_base upto year_to
 #' @param vaccine_base vaccine to be dependent on
-#' @param year_current year current
 #' @param sia_level campaign coverage level
 #' @param age_from campaign target age from
 #' @param age_to campaign target age to
 #' @param gender 1 for both, 2 for males, 3 for females
-sia_catch_up <- function(d, dat, vaccine_base, year_current, sia_level, age_from, age_to, gender){
+sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gender){
   ## this is relevant to MenA, Typhoid, and HPV mult-cohort SIAs before routine introduction
   ## we need are year_intro and age groups
   ## if previously SIAs happened, only target missed cohorts
@@ -192,7 +192,7 @@ sia_catch_up <- function(d, dat, vaccine_base, year_current, sia_level, age_from
 
 #' campaign coverage projection rule - recurrent campaigns, e.g. cholera
 #' @param d a data frame containing at least (year, coverage)
-#' @param dat Not used yet. It is just here for maintaining consistent campaign projection structure
+#' @param dat Not used. It is just here for maintaining consistent campaign projection structure
 #' @param year_from year from
 #' @param year_to year to
 #' @param frequency sia frequency
@@ -200,7 +200,7 @@ sia_catch_up <- function(d, dat, vaccine_base, year_current, sia_level, age_from
 #' @param age_from campaign target age from
 #' @param age_to campaign target age to
 #' @param  gender 1 for both, 2 for males, 3 for females
-sia_recurrent <- function(d, dat, year_from, year_to, frequency, sia_level, age_from, age_to, gender){
+sia_recurrent <- function(d, dat = NULL, year_from, year_to, frequency, sia_level, age_from, age_to, gender){
 
   if(nrow(d[d$activity_type == "campaign", ]) > 0){
     message("historical campaign is identified, project from most recent campaign year")
@@ -209,6 +209,8 @@ sia_recurrent <- function(d, dat, year_from, year_to, frequency, sia_level, age_
   t <- data.frame(year = seq(year_from, year_to, frequency),
                   coverage = sia_level,
                   age_from = age_from,
-                  age_to = age_to)
+                  age_to = age_to) %>%
+    bind_rows(d) %>%
+    arrange(year)
   return(t)
 }

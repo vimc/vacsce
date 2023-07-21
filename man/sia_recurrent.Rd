@@ -6,7 +6,7 @@
 \usage{
 sia_recurrent(
   d,
-  dat,
+  dat = NULL,
   year_from,
   year_to,
   frequency,
@@ -19,7 +19,7 @@ sia_recurrent(
 \arguments{
 \item{d}{a data frame containing at least (year, coverage)}
 
-\item{dat}{Not used yet. It is just here for maintaining consistent campaign projection structure}
+\item{dat}{Not used. It is just here for maintaining consistent campaign projection structure}
 
 \item{year_from}{year from}
 

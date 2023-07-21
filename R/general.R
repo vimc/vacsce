@@ -165,8 +165,10 @@ vac_sce <- function(input){
   return(dat)
 }
 
-## extract example data for vignette
-vimc_historical_data <- function(con, year_cur = 2021){
+## extract example data
+## this function generates example data for package users
+## it needs run once and return a csv data frame
+generate_example_data <- function(con, year_cur = 2021){
   touch <- vimpact::get_touchstone(con, "202210covidimpact")
 
   # extract data from montagu
@@ -190,8 +192,6 @@ vimc_historical_data <- function(con, year_cur = 2021){
                        list(touch)) %>%
     right_join(t, by = c("country", "vaccine", "activity_type")) %>%
     mutate(country = "ISO", target = NA, coverage = coverage * runif(1, 0.9,1.1)) %>%
-    mutate(proportion_risk = ifelse(is.na(proportion_risk, 1, proportion_risk)))
-  d <- list(historic = d %>% filter(year <= year_cur),
-            future = fut %>% fitted(year > year_cur))
-  saveRDS(d, "inst/example_data.rds")
+    mutate(proportion_risk = ifelse(is.na(proportion_risk), 1, proportion_risk))
+  write.csv(d, "inst/example_data.csv", row.names = FALSE)
 }
