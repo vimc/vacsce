@@ -1,4 +1,3 @@
-context("util")
 
 test_that("assert_col_names checks required columns are present", {
   data <- data_frame(one = c("1", "2", "3"),

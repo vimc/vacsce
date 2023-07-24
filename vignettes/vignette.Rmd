@@ -32,7 +32,7 @@ This vignette describes how to use *vacsce* to generate vaccination coverage sce
 
 **Load example data**
 ```{r}
-data <- read.csv("inst/")
+data <- read.csv("inst/example_data.csv")
 year_cur <- 2021
 his <- data[data$year <= year_cur & data$year > 2000, ]
 fut <- data[data$year > year_cur, ]
@@ -91,7 +91,7 @@ Projection rule, *sia_follow_up*, projects future recurrent follow-up supplement
 d <- his[his$vaccine == "HPV",]
 dat <- catch_up_with_x(d, year_from = 2027, year_to = 2030, vaccine_x_level = 0.7) %>%
    mutate(disease = "HPV", vaccine = "HPV", country = "ISO", activity_type = "routine", age_from = 9, age_to = 9, gender = 3, proportion_risk = 1)
-sia_catch_up(d, dat, vaccine_base = "HPV", year_current = year_cur, sia_level = 0.9, age_from = 10, age_to = 15)%>%
+sia_catch_up(d, dat, vaccine_base = "HPV", sia_level = 0.9, age_from = 10, age_to = 15)%>%
    mutate(disease = "HPV", vaccine = "HPV", country = "ISO", activity_type = "campaign", gender = 3, proportion_risk = 1)
 ```
 
@@ -100,7 +100,7 @@ d <- his[his$vaccine == "MenA" & his$activity_type == "routine",]
 dat <- catch_up_with_x(d, year_from = 2023, year_to = 2026, vaccine_x_level = 0.7) %>%
    mutate(disease = "MenA", vaccine = "MenA", country = "ISO", activity_type = "routine", age_from = 9, age_to = 9, gender = 3, proportion_risk = 1)
 d <- his[his$vaccine == "MenA" & his$activity_type == "campaign",]
-sia_catch_up(d, dat, vaccine_base = "MenA", year_current = year_cur, sia_level = 0.9, age_from = 1, age_to = 29)%>%
+sia_catch_up(d, dat, vaccine_base = "MenA", sia_level = 0.9, age_from = 1, age_to = 29)%>%
    mutate(disease = "MenA", vaccine = "MenA", country = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
 ```
 **sia_recurrent**

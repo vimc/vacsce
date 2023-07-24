@@ -51,3 +51,7 @@ assert_has_columns <- function(data, col_names,
   }
   invisible(TRUE)
 }
+
+data_frame <- function(...){
+  data.frame(..., stringsAsFactors = FALSE)
+}

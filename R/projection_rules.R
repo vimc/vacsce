@@ -43,7 +43,7 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95){
 catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level = 1/3){
   years <- seq(year_from, year_to, 1)
   cov <- rep(NA, length(years))
-  d <- d[is.numeric(d$year), ]
+  d <- d[is.numeric(d$year) & d$year > 0,]
   if (nrow(d) == 0){
     ## routine introduction
     cov[1] <- vaccine_x_level*intro_level # intro at 33% of target vaccine
@@ -53,7 +53,7 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
     message("intro_level is not used as not applicable")
     cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, vaccine_x_level)
   }
-  dat <- bind_rows(d, data.frame(year = years, coverage = cov))
+  dat <- bind_rows(d, data_frame(year = years, coverage = cov))
   return(dat)
 }
 
@@ -158,7 +158,7 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
 
   ## find routine intro year, there will be a campaign in this year
   year_intro <- min(dat$year[dat$vaccine == vaccine_base])
-
+  d <- d[is.numeric(d$year) & d$year > 0, ]
   ## any campaign in the past?
   ## if there is one, catch-up missing cohorts, otherwise refine age_from, age_to to only these missing cohorts
   if (nrow(d) > 0){
