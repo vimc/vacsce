@@ -110,9 +110,11 @@ d <- his[his$vaccine == "Measles", ]
 sia_recurrent(d, dat = NULL, year_from = 2020, year_to = 2030, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60)%>%
    mutate(disease = "Measles", vaccine = "Measles", country = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
 ```
+continue projection from record.
 
 ```{r}
 d <- his[his$vaccine == "Cholera", ]
 sia_recurrent(d, dat = NULL, year_from = 2020, year_to = 2030, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60)%>%
    mutate(disease = "Cholera", vaccine = "Cholera", country = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
 ```
+projection without historical sias.
