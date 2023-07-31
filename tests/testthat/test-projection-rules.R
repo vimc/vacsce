@@ -68,7 +68,7 @@ test_that("sia_follow_up", {
                   year = 2020:2021,
                   coverage = c(.8,.85))
   dat <- non_linear_scale_up(d, year_from = 2022, year_to = 2025, endpoint = 0.9) %>%
-    mutate(vaccine = "A", activity_type = "routine")
+    dplyr::mutate(vaccine = "A", activity_type = "routine")
 
   dd <- data_frame(vaccine = "A",
                   activity_type = "campaign",
@@ -87,7 +87,7 @@ test_that("sia_follow_up", {
                   year = 2020:2021,
                   coverage = c(.5,.65))
   dat <- non_linear_scale_up(d, year_from = 2022, year_to = 2025, endpoint = 0.9) %>%
-    mutate(vaccine = "A", activity_type = "routine")
+    dplyr::mutate(vaccine = "A", activity_type = "routine")
 
   dd <- data_frame(vaccine = "A",
                    activity_type = "campaign",
@@ -111,7 +111,7 @@ test_that("sia_catch_up",{
                   year = 2020:2021,
                   coverage = c(.8,.85))
   dat <- non_linear_scale_up(d, year_from = 2022, year_to = 2025, endpoint = 0.9) %>%
-    mutate(vaccine = "A", activity_type = "routine")
+    dplyr::mutate(vaccine = "A", activity_type = "routine")
   dd <- data_frame(year = NA, coverage = NA)
   expect_equal(2020,
                sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 10, age_to = 15)[["year"]],
@@ -123,7 +123,7 @@ test_that("sia_catch_up",{
                   year = 2022,
                   coverage = .8)
   dat <- non_linear_scale_up(d, year_from = 2023, year_to = 2025, endpoint = 0.9) %>%
-    mutate(vaccine = "A", activity_type = "routine")
+    dplyr::mutate(vaccine = "A", activity_type = "routine")
   dd <- data_frame(year = 2018, coverage = 0.8, age_from = 1, age_to = 29)
   expect_equal(c(2018, 2022),
                sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 1, age_to = 29)[["year"]],

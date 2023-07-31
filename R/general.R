@@ -5,6 +5,7 @@
 #' params is a list (example below)
 #' <- list(country = "<country_code>",
 #'         disease = "<disease_code>",
+#'         proportion_risk = <proportion of at risk population>,
 #'         year_cur = <current_year>, # separates historical data and future projection
 #'         introduction = data.frame(vaccine = c("<vaccine_1>", "<vaccine_2>"),
 #'                                  activity_type = c("<activity_vaccine_1>", "<activity_vaccine_2>"),
@@ -16,18 +17,20 @@
 input_check <- function(input){
   ## saninty check for input
   ## 1.) check input$params
-  country <- unique(input$params$country)
+  region <- unique(input$params$region)
   disease <- unique(input$params$disease)
   year_cur <- as.integer(unique(input$params$year_cur))
-  stopifnot(length(country) == 1L) # work for one country only
+  proportion_risk <- input$params$proportion_risk
+  stopifnot(length(region) == 1L) # work for one region only
   stopifnot(length(disease) == 1L) # work for one disease only
   stopifnot(length(year_cur) == 1L) # current year
+  stopifnot(proportion_risk <= 1 & proportion_risk > 0) # proportion of at risk population
 
   ## arrange introduction and projection rules, so that campaign is the last one - because campaign is frequently dependent on routine levels
   introduction <- input$params$introduction %>%
-    mutate(index = seq_along(vaccine)) %>%
-    arrange(desc(activity_type)) %>%
-    mutate(index2 = seq_along(vaccine) )
+    dplyr::mutate(index = seq_along(vaccine)) %>%
+    dplyr::arrange(desc(activity_type)) %>%
+    dplyr::mutate(index2 = seq_along(vaccine) )
 
   if(nrow(introduction) != length(input$proj_rul)){
     txt <- "The number of vaccine delivery (input$params$introduction) and projection rules (input$proj_rul) do not match."
@@ -37,7 +40,7 @@ input_check <- function(input){
   input$proj_rul <- input$proj_rul[introduction$index]
 
   ## 2.) check input$src
-  key_cols <-  c("country", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
+  key_cols <-  c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
   if(nrow(input$src$historic) > 0){
     assert_has_columns(input$src$historic, key_cols)
   }
@@ -47,14 +50,14 @@ input_check <- function(input){
 
   ## filter data by params specified
   his <-  input$src$historic %>%
-    filter(country == !!country) %>%
-    right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type")) %>%
-    filter(!is.na(year))
+    dplyr::filter(region == !!region) %>%
+    dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type")) %>%
+    dplyr::filter(!is.na(year))
 
   fut <-  input$src$future %>%
-    filter(country == !!country) %>%
-    right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))%>%
-    filter(!is.na(year))
+    dplyr::filter(region == !!region) %>%
+    dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))%>%
+    dplyr::filter(!is.na(year))
 
   ## 3.) check introduction
   ## merge data source and user specified introduction dates
@@ -62,11 +65,11 @@ input_check <- function(input){
   ## non-NA introduction will over-write input$src$historical
   if (nrow(his[his$activity_type != "campaign", ]) > 0){
     s <- his %>% group_by(vaccine, activity_type) %>%
-      filter(activity_type != "campaign") %>%
+      dplyr::filter(activity_type != "campaign") %>%
       summarise(year_intro_src = min(year), .groups = "keep") %>%
       as.data.frame() %>%
-      right_join(introduction, by = c("vaccine", "activity_type")) %>%
-      mutate(conflict = (!is.na(year_intro) & !is.na(year_intro_src) & year_intro != year_intro_src))
+      dplyr::right_join(introduction, by = c("vaccine", "activity_type")) %>%
+      dplyr::mutate(conflict = (!is.na(year_intro) & !is.na(year_intro_src) & year_intro != year_intro_src))
 
     if (any(s$conflict)){
       message("conflict in introduction assumption between input$params$introduction and input$src$historical")
@@ -75,11 +78,14 @@ input_check <- function(input){
               or make sure your projection rule is set up correctly")
     }
     input$introduction <- s %>%
-      mutate(year_intro = ifelse(is.na(year_intro), year_intro_src, year_intro)) %>%
-      select(vaccine, activity_type, year_intro, conflict) %>%
-      mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur)
-    input$his <- his %>% right_join(input$introduction %>% filter(!future_introduction & !conflict), by = join_by("vaccine", "activity_type")) %>%
-      select(-year_intro, - future_introduction, -conflict)
+      dplyr::mutate(year_intro = ifelse(is.na(year_intro), year_intro_src, year_intro)) %>%
+      dplyr::select(vaccine, activity_type, year_intro, conflict) %>%
+      dplyr::mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur)
+    input$his <- his %>%
+      dplyr::right_join(input$introduction %>%
+                          dplyr::filter(!future_introduction & !conflict),
+                        by = join_by("vaccine", "activity_type")) %>%
+      dplyr::select(-year_intro, - future_introduction, -conflict)
   } else {
     input$his <- his
     input$introduction <- input$params$introduction
@@ -106,6 +112,7 @@ input_check <- function(input){
       }
     }
   }
+
   return(input)
 }
 
@@ -119,18 +126,26 @@ vac_sce <- function(input){
   fut <- input$fut
   x <- nrow(input$introduction)
 
+  ## scale routine coverage by proportion_risk for projection
+  ## run projection rules
+  ## scale routine coverage back by proportion risk
+  his <- his %>%
+    mutate(coverage = ifelse(activity_type == "routine", coverage/input$params$proportion_risk, coverage))
+  fut <- fut %>%
+    mutate(coverage = ifelse(activity_type == "routine", coverage/input$params$proportion_risk, coverage))
+
   dat <- NULL
   for(i in seq_len(x)){
     # for each vaccine delivery do scenario projection
     print(sprintf("projecting trajectory for %s %s", input$introduction$activity_type[i], input$introduction$vaccine[i]))
     d0 <- his %>%
-      right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
+      dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
     d1 <- fut %>%
-      right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
+      dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
     d <- d0 %>%
-      select(year, coverage, age_from, age_to) %>%
-      filter(!is.na(year)) %>%
-      arrange(year)
+      dplyr::select(year, coverage, age_from, age_to) %>%
+      dplyr::filter(!is.na(year)) %>%
+      dplyr::arrange(year)
     r <- input$proj_rul[[i]] # projection rules
 
     if(!is.null(r) & input$introduction$activity_type[i] != "campaign"){
@@ -154,13 +169,15 @@ vac_sce <- function(input){
         print(func)
         dat <- eval(parse(text = func)) %>%
           merge(input$introduction[i, c("vaccine", "activity_type")]) %>%
-          bind_rows(dat)
+          dplyr::bind_rows(dat)
       }
     }
   }
   dat <- dat %>%
-    mutate(country = input$params$country,
-           disease = input$params$disease)
+    dplyr::mutate(region = input$params$region,
+           disease = input$params$disease,
+           proportion_risk =input$params$proportion_risk) %>%
+    dplyr::mutate(coverage = ifelse(activity_type == "routine", coverage*input$params$proportion_risk, coverage))
 
   return(dat)
 }
@@ -168,7 +185,7 @@ vac_sce <- function(input){
 ## extract example data
 ## this function generates example data for package users
 ## it needs run once and return a csv data frame
-generate_example_data <- function(con, year_cur = 2021){
+generate_example_data <- function(con){
   touch <- vimpact::get_touchstone(con, "202210covidimpact")
 
   # extract data from montagu
@@ -176,13 +193,13 @@ generate_example_data <- function(con, year_cur = 2021){
   # measles: past mcv1 intro, future mcv2 intro + follow-up sias
   # hpv: catch-up + future routine intro
   # mena: catch-up + mini-catch-up + future routine intro
-  # anonymous country
-  t <- data.frame(country = c(324, 324, 324, 50, 50, 108, 108),
+  # anonymous region
+  t <- data.frame(region = c(324, 324, 324, 50, 50, 108, 108),
                   disease =  c("Measles", "Measles", "Measles", "HPV", "HPV", "MenA", "MenA"),
                   vaccine = c("MCV1", "MCV2", "Measles", "HPV", "HPV", "MenA", "MenA"),
                   activity_type = c("routine", "routine", "campaign", "campaign", "routine", "campaign", "routine"))
   d <- DBI::dbGetQuery(con,
-                       paste("SELECT country.nid AS country, vaccine, activity_type, year, age_from, age_to, gender, target, coverage, proportion_risk",
+                       paste("SELECT country.nid AS region, vaccine, activity_type, year, age_from, age_to, gender, target, coverage",
                              "FROM coverage_set JOIN coverage ON coverage.coverage_set = coverage_set.id",
                              "JOIN country ON country.id = coverage.country",
                              "WHERE touchstone = $1",
@@ -190,8 +207,7 @@ generate_example_data <- function(con, year_cur = 2021){
                              "AND coverage > 0",
                              "AND year <= 2030"),
                        list(touch)) %>%
-    right_join(t, by = c("country", "vaccine", "activity_type")) %>%
-    mutate(country = "ISO", target = NA, coverage = coverage * runif(1, 0.9,1.1)) %>%
-    mutate(proportion_risk = ifelse(is.na(proportion_risk), 1, proportion_risk))
+    right_join(t, by = c("region", "vaccine", "activity_type")) %>%
+    mutate(region = "ISO", target = NA, coverage = coverage * runif(1, 0.9,1.1))
   write.csv(d, "inst/example_data.csv", row.names = FALSE)
 }

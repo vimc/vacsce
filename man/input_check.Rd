@@ -12,6 +12,7 @@ input is a list contains three objects - params, src and proj_rules
 params is a list (example below)
 <- list(country = "<country_code>",
         disease = "<disease_code>",
+        proportion_risk = <proportion of at risk population>,
         year_cur = <current_year>, # separates historical data and future projection
         introduction = data.frame(vaccine = c("<vaccine_1>", "<vaccine_2>"),
                                  activity_type = c("<activity_vaccine_1>", "<activity_vaccine_2>"),

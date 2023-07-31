@@ -1,7 +1,7 @@
 ---
 title: "Using vacsce for vaccination coverage scenario generation"
-author: "Xiang Li"
-date: "`r Sys.Date()"
+author: "Dr. Xiang Li"
+date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Using vacsce for vaccination coverage scenario generation}
@@ -17,14 +17,15 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library("dplyr")
 #library(vacsce)
+library("vimpact")
+library("dplyr")
 devtools::load_all("../")
 ```
 
 ### Introduction
 
-This vignette describes how to use *vacsce* to generate vaccination coverage scenarios. *vacsce* provides a set of coverage projection rules. Its initial objective was to document commonly used coverage projection rules and works as a tool for VIMC's model runs, interim-update and related analysis. As VIMC continues expanding its collaboration with greater community, we further plan to release *vacsce* as a tool for external users who share common interests such as planning for immunization programs, assessment of vaccine impact, etc.
+This vignette describes how to use **vacsce** to generate vaccination coverage scenarios. **vacsce** provides a set of coverage projection rules. Its initial objective was to document commonly used coverage projection rules and works as a tool for VIMC's model runs, interim-update and related analysis. As VIMC continues expanding its collaboration with greater community, we further plan to release **vacsce** as a tool for external users who share common interests such as planning for immunization programs, assessment of vaccine impact, etc.
 
 ### Future vaccination coverage projection rules
 
@@ -32,57 +33,87 @@ This vignette describes how to use *vacsce* to generate vaccination coverage sce
 
 **Load example data**
 ```{r}
-data <- read.csv("inst/example_data.csv")
-year_cur <- 2021
-his <- data[data$year <= year_cur & data$year > 2000, ]
-fut <- data[data$year > year_cur, ]
-```
+data <- read.csv("../inst/example_data.csv") # example coverage source data
+year_cur <- 2021 # current year partitions historical and future coverage sources
+his <- data[data$year <= year_cur & data$year > 2015, ] # historical coverage data, for simplicity only use data from 2016
+fut <- data[data$year > year_cur, ] # future coverage data (in practice, future coverage data is projected by vacsce )
 
-**keep_levels**
-Routine coverage projection - Future coverage level is maintained at certain constant level.
+kableExtra::kable(his[3, ])
+```
+Here we present the first row of example data for you to understand input data structure for **vacsce**. The input data consists of columns **"region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage"**. Each row of data represents a particular immunisation activity: **age_from** and **age_to** define target age groups of vaccination, **target** refers to the population of target age groups in the **region**, coverage is the proportion of target population vaccinated. In this set up, **coverage** is region level. **proportion_risk** is needed as **vacsce** projects future coverage relevant to at-risk population first, and scale the projection to regional target population after.
+
+[Give an example]
+In a region, age_from = 0, age_to = 0, target = cohort size of age 0, coverage = 20%, and proportion_risk = 0.3. This translates to 66.7% coverage in at-risk population.
+
+**Routine coverage projection rule - keep_levels**
 
 ```{r}
 d <- his[his$vaccine == "MCV1",]
-keep_levels(d, year_from = year_cur + 1, year_to=2030, level=d$coverage[d$year == year_cur])
 ```
-In this example, the historical coverage of MCV1 for country ISO is `r d$coverage[d$year == year_cur]` in year `r year_cur`. *keep_levels* projects future coverage from `r year_cur+1` to 2030, where future coverage level is maintained at the level of `r year_cur`.
+This is a routine vaccination coverage projection rule. It assumes that future routine coverage level is maintained at a certain constant level. In the following MCV1 example, the historical coverage of MCV1 is `r paste0(round(d$coverage[d$year == year_cur], 3)*100, "%")` in year `r year_cur`. **keep_levels** projects future coverage from `r year_cur+1` to 2030, where future coverage level is maintained at the level of `r year_cur`.
+
+```{r}
+dat <- keep_levels(d, year_from = year_cur + 1, year_to=2030, level=d$coverage[d$year == year_cur])
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+```
 
 
-**incremental**
-Routine coverage projection - Future coverage increase incrementally.
+**Routine coverage projection rule - incremental**
 
 ```{r}
 d <- his[his$vaccine == "MCV1",]
-incremental(d, year_from = year_cur + 1, year_to = 2030, step = 0.01, cap = 0.95)
 ```
-The historical coverage of MCV1 for country ISO is `r d$coverage[d$year == year_cur]` in year `r year_cur`. *incremental* projects future coverage from `r year_cur+1` to 2030, where future coverage level increases by 1% (set by parameter - *step*) annually. Parameter *cap* sets a threshold for maximum future coverage level. However, it will be coerced by best historical coverage is which is higher.
 
-**catch_up_with_x**
+**incremental** is also a routine coverage projection rule. It suggests that future vaccination coverage will grow incrementally. Taking again the MCV1 example. **incremental** projects future coverage from `r year_cur+1` to 2030, where future coverage level increases by 1% (set by parameter - **step**) annually. Parameter **cap** defines a threshold for maximum future coverage level. However, it will be coerced by best historical coverage if which is higher.
 
 ```{r}
-d <- his[his$vaccine == "MCV2",] # zero-rows as not historical data
-catch_up_with_x(d, year_from = year_cur + 3, year_to = year_cur + 7, vaccine_x_level = 0.85, intro_level = 1/3) %>%
-  mutate(disease = "Measles", vaccine = "MCV2", country = "ISO", activity_type = "routine", age_from = 2, age_to = 2, gender = 1, proportion_risk = 1)
+dat <- incremental(d, year_from = year_cur + 1, year_to = 2030, step = 0.01, cap = 0.95)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
 ```
-There is no historical MCV2 routine introduction in the example data. *catch_up_with_x* projects routine introduction in year `r year_cur + 3`. Coverage level increases non-linearly and reaches 85% in year `r year_cur + 6`. 85% represents coverage level of a certain vaccine in year `r year_cur + 6`. This coverage level multiply by factor *intro_level* determines the routine introduction coverage level of MCV2 in `r year_cur + 3`. 
 
-**non_linear_scale_up**
+
+**Routine coverage projection rule - catch_up_with_x**
+
+```{r}
+d <- his[his$vaccine == "MCV2",]
+```
+
+**catch_up_with_x** is another routine coverage projection rule. To make it simply, **catch_up_with_x** is short for "catch up with the coverage level of vaccine X from year_from to year_to". This can be more flexible if one believes it is more sense-making to "catch up with a u-p/down-scaled coverage level of vaccine X from year_from to year_to". This rule is particularly useful for routine introduction. Of course, it can be generalised to situations where routine immunisation has been introduced, while one wants to boost-up coverage levels to match certain vaccine coverage level. 
+
+Here we give an example where the rule is used for routine introduction. There is no historical MCV2 routine introduction in the example data, indicating a future routine introduction. **catch_up_with_x** projects routine introduction in year `r year_cur + 3`. Coverage level increases non-linearly and reaches 85% in year `r year_cur + 6`. 85% represents coverage level (or up-/down-scaled level) of a certain vaccine in year `r year_cur + 6` . This coverage level multiply by factor *intro_level* determines the routine introduction coverage level of MCV2 in `r year_cur + 3`. 
+
+In the case where routine introduction has had happened. The projection rule will **non-linearly scale-up** to the target *vaccine_x_level* from *year_from-1*, hence one needs to make sure there is a coverage value in *year_from -1*.  A message will show up saying that parameter *intro_level* is not applicable and not used. (N.B. **non-linearly scale-up** refers to the next generation rule to be introduced.)
+
+```{r}
+dat <- catch_up_with_x(d, year_from = year_cur + 3, year_to = year_cur + 7, vaccine_x_level = 0.85, intro_level = 1/3) %>%
+  dplyr::mutate(disease = "Measles", vaccine = "MCV2", region = "ISO", activity_type = "routine", age_from = 2, age_to = 2, gender = 1, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+```
+
+**Routine coverage projection rule - non_linear_scale_up**
+
+**non_linear_scale_up** refers to IA2030 non-linear scale up function (TBA: ref.). 
 
 ```{r}
 d <- his[his$vaccine == "MCV1",]
-non_linear_scale_up(d, year_from = year_cur + 1, year_to = 2030, endpoint = 0.9)
+dat <- non_linear_scale_up(d, year_from = year_cur + 1, year_to = 2030, endpoint = 0.9)%>%
+  dplyr::mutate(disease = "Measles", vaccine = "MCV1", region = "ISO", activity_type = "routine", age_from = 0, age_to = 0, gender = 1, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
 ```
-The historical coverage of MCV1 for country ISO is `r d$coverage[d$year == year_cur]` in year `r year_cur`. *non_linear_scale_up* projects future coverage from `r year_cur+1` to 2030, where future coverage level non-lineraly increases annually. Parameter *endpoint* sets the target coverage level in year 2030.
+The historical coverage of MCV1 for region ISO is `r d$coverage[d$year == year_cur]` in year `r year_cur`. *non_linear_scale_up* projects future coverage from `r year_cur+1` to 2030, where future coverage level non-lineraly increases annually. Parameter *endpoint* sets the target coverage level in year 2030.
 
 **sia_follow_up**
 
 ```{r}
 d <- his[his$vaccine == "MCV1",]
 dat <- non_linear_scale_up(d, year_from = year_cur + 1, year_to = 2030, endpoint = 0.9) %>%
-  mutate(country = d$country[1], vaccine = d$vaccine[1])
+  dplyr::mutate(disease = "Measles", vaccine = "MCV1", region = "ISO", activity_type = "routine", age_from = 0, age_to = 0, gender = 1, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
 d <- his[his$vaccine == "Measles", ]
-sia_follow_up(d, dat, vaccine_base = "MCV1", year_current = year_cur, year_to = 2030, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5) %>%
-   mutate(disease = "Measles", vaccine = "Measles", country = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+dat <- sia_follow_up(d, dat, vaccine_base = "MCV1", year_current = year_cur, year_to = 2030, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5) %>%
+   dplyr::mutate(disease = "Measles", vaccine = "Measles", region = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+
 ```
 Projection rule, *sia_follow_up*, projects future recurrent follow-up supplementary immunisation activities (SIAs) according to a baseline routine vaccination trajectory and historical SIAs. In this example, we first project future MCV1 coverage using the *non_linear_scale_up* rule. Then we evaluate MCV1 coverage trajectory and historical SIAs from year *year_current-look_back* to determine future follow-up campaigns. For details of how this evaluation is done, see projection_rules.R/sia_follow_up for details.
 
@@ -90,31 +121,209 @@ Projection rule, *sia_follow_up*, projects future recurrent follow-up supplement
 ```{r}
 d <- his[his$vaccine == "HPV",]
 dat <- catch_up_with_x(d, year_from = 2027, year_to = 2030, vaccine_x_level = 0.7) %>%
-   mutate(disease = "HPV", vaccine = "HPV", country = "ISO", activity_type = "routine", age_from = 9, age_to = 9, gender = 3, proportion_risk = 1)
-sia_catch_up(d, dat, vaccine_base = "HPV", sia_level = 0.9, age_from = 10, age_to = 15)%>%
-   mutate(disease = "HPV", vaccine = "HPV", country = "ISO", activity_type = "campaign", gender = 3, proportion_risk = 1)
+   dplyr::mutate(disease = "HPV", vaccine = "HPV", region = "ISO", activity_type = "routine", age_from = 9, age_to = 9, gender = 3, proportion_risk = 1)
+
+dat <- sia_catch_up(d, dat, vaccine_base = "HPV", sia_level = 0.9, age_from = 10, age_to = 15)%>%
+   dplyr::mutate(disease = "HPV", vaccine = "HPV", region = "ISO", activity_type = "campaign", gender = 3, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+
 ```
 
 ```{r}
 d <- his[his$vaccine == "MenA" & his$activity_type == "routine",]
 dat <- catch_up_with_x(d, year_from = 2023, year_to = 2026, vaccine_x_level = 0.7) %>%
-   mutate(disease = "MenA", vaccine = "MenA", country = "ISO", activity_type = "routine", age_from = 9, age_to = 9, gender = 3, proportion_risk = 1)
+   dplyr::mutate(disease = "MenA", vaccine = "MenA", region = "ISO", activity_type = "routine", age_from = 9, age_to = 9, gender = 3, proportion_risk = 0.2)
+
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+
 d <- his[his$vaccine == "MenA" & his$activity_type == "campaign",]
-sia_catch_up(d, dat, vaccine_base = "MenA", sia_level = 0.9, age_from = 1, age_to = 29)%>%
-   mutate(disease = "MenA", vaccine = "MenA", country = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+dat <- sia_catch_up(d, dat, vaccine_base = "MenA", sia_level = 0.9, age_from = 1, age_to = 29)%>%
+   dplyr::mutate(disease = "MenA", vaccine = "MenA", region = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+
 ```
 **sia_recurrent**
 
 ```{r}
 d <- his[his$vaccine == "Measles", ]
-sia_recurrent(d, dat = NULL, year_from = 2020, year_to = 2030, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60)%>%
-   mutate(disease = "Measles", vaccine = "Measles", country = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+dat <- sia_recurrent(d, dat = NULL, year_from = 2020, year_to = 2030, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60)%>%
+   dplyr::mutate(disease = "Measles", vaccine = "Measles", region = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+
 ```
 continue projection from record.
 
 ```{r}
 d <- his[his$vaccine == "Cholera", ]
-sia_recurrent(d, dat = NULL, year_from = 2020, year_to = 2030, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60)%>%
-   mutate(disease = "Cholera", vaccine = "Cholera", country = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+dat <- sia_recurrent(d, dat = NULL, year_from = 2020, year_to = 2030, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60)%>%
+   dplyr::mutate(disease = "Cholera", vaccine = "Cholera", region = "ISO", activity_type = "campaign", gender = 1, proportion_risk = 1)
+kableExtra::kable(dat %>% dplyr::select(disease, vaccine, activity_type, region, age_from, age_to, gender, year, coverage), digits = 3)
+
 ```
 projection without historical sias.
+
+
+### Using vacsce with examples
+
+## The tool can work on a single delivery, or a set of deliveries
+## it works on only one region-disease combination each time
+## in the next, I give a few examples
+
+## A few tips before examples
+## STEPS: prepare input -> run vacsce for coverage scenario
+## input is a list consists of three objects - params, src and proj_rul, meaning parameters, coverage source and projection rules, respectively.
+```{r}
+## params ##
+## params is a list that contains
+## ------- region: <character> e.g. a country name, ISO code, sub-national region, or anything that is meaning for the user
+## ------- disease: <character> any disease name of interest
+## ------- proportion_risk: <numeric> the proportion of population at risk of infection, between 0-1
+## ------- year_cur: <int> current year. Though this can be inferred from historical coverage data (if any), vacsce still requires this be specified under its structural design
+## ------- introduction: <data.frame> introduction years by vaccine delivery, i.e. vaccine, activity_type, and year_intro.
+##                       NA yera_intro is fine for campaigns or routines already introduced, cannot be NA for future routine introduction.
+
+## src ##
+## src is a list of historic and future coverage sources. src=lis(historic, future)
+## ------- historic: historical coverage source
+## ------- future: future coverage source
+##                  historic and future are two data frames sharing the same structure (see below)
+##                  (region, vaccine, activity_type, year, age_from, age_to, gender, target, coverage)
+
+## proj_rul ##
+## proj_rul is a list consists of future projection rules.
+## The number of rules are determined by how many vaccine delivery specified in params$introduction
+## N.B. rules will over-write any source coverage provided
+## e.g. if future is provided via src, but projection rules are also specified, use projection rules
+## e.g. if params$introduction specified a routine introduction different from historical coverage source, projection rules will be used to re-create historical coverage
+```
+
+## EXAMPLE START
+## example data and common parameter set-up
+## (example coverage source are collected for all examples to show)
+example_data <- read.csv("inst/example_data.csv")
+src <- list(historic = example_data[example_data$year <= year_cur, ],
+            future = example_data[example_data$year > year_cur, ])
+year_cur <- 2021
+region <- "ISO"
+
+## example 1 - mcv1 for both historical and future from source data, no projection
+input <- list(params = list(region = region,
+                            disease = "Measles",
+                            proportion_risk = 1,
+                            year_cur = year_cur,
+                            introduction = data.frame(vaccine = c("MCV1"),
+                                                      activity_type = c("routine"),
+                                                      year_intro = c(NA))),
+              src = src,
+              proj_rul = list(
+                rule1 = NULL # null means no operation needed, simply bind historical and future from src
+              )
+)
+dat <- vac_sce(input)
+
+## example 2 - mcv1 for historical from source + non-linear scale-up
+input <- list(params = list(region = region,
+                            disease = "Measles",
+                            proportion_risk = 1,
+                            year_cur = year_cur,
+                            introduction = data.frame(vaccine = c("MCV1"),
+                                                      activity_type = c("routine"),
+                                                      year_intro = c(NA))),
+              src = src,
+              proj_rul = list(
+                rule1 = list(non_linear_scale_up = list(year_from = 2022, year_to = 2030, endpoint = 0.99)) # rules are provided as a list of lists, each component is a projection rule name and its corresponding parameters
+              )
+)
+dat <- vac_sce(input)
+
+## next example is a complex/flexible one
+## example 3 - mcv1 historical + non-linear scale-up; manually defined future intro + various rules; db sia for both past and future
+input <- list(params = list(region = region,
+                            disease = "Measles",
+                            proportion_risk = 1,
+                            year_cur = 2021,
+                            introduction = data.frame(vaccine = c("MCV1", "MCV2", "Measles"),
+                                                      activity_type = c("routine", "routine", "campaign"),
+                                                      year_intro = c(NA, 2024, NA))),
+              src = src,
+              proj_rul = list(
+                rule1 = list(non_linear_scale_up = list(year_from = 2022, year_to = 2030, endpoint = 0.99)), # rule 1 for mcv1
+                rule2 = list(catch_up_with_x = list(year_from = 2024, year_to = 2027, vaccine_x_level = 0.7), # rule 2 for mcv2
+                             non_linear_scale_up = list(year_from = 2028, year_to = 2030, endpoint = 0.9),
+                             keep_levels = list(year_from = 2031, year_to = 2035, level = 0.9),
+                             incremental = list(year_from = 2036, year_to = 2040, step=0.02, cap = 0.95)),
+                rule3 = NULL ## currently not projecting campaigns # rule 3 for campaign - campaign projection rules under development
+              )
+)
+dat <- vac_sce(input)
+
+## example 4 - mcv1 historical + non-linear scale-up; manually defined future intro + various rules; db sia for past and future projection
+## this has to be two-steps, as campaign projection depends on routine projections
+
+input <- list(params =  list(region = region,
+                             disease = "Measles",
+                             proportion_risk = 1,
+                             year_cur = 2021,
+                             introduction = data.frame(vaccine = c("MCV1", "MCV2", "Measles"),
+                                                       activity_type = c("routine", "routine", "campaign"),
+                                                       year_intro = c(NA, 2024, NA))),
+              src = src,
+              proj_rul = list(
+                rule1 = list(non_linear_scale_up = list(year_from = 2022, year_to = 2030, endpoint = 0.99)), # rule 1 for mcv1
+                rule2 = list(catch_up_with_x = list(year_from = 2024, year_to = 2027, vaccine_x_level = 0.7), # rule 2 for mcv2
+                             non_linear_scale_up = list(year_from = 2028, year_to = 2030, endpoint = 0.95)),
+                rule3 = list(sia_follow_up = list(vaccine_base = "MCV1", year_current = 2021, year_to = 2030, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5)) ## rule 3 for campaign
+              )
+)
+dat <- vac_sce(input)
+
+## example 5 - hpv historical + non-linear scale-up; manually defined future intro + various rules; db sia for past and future projection for initial mac
+## this has to be two-steps, as campaign projection depends on routine projections
+input <- list(params = list(region = region,
+                            disease = "HPV",
+                            proportion_risk = 1,
+                            year_cur = 2021,
+                            introduction = data.frame(vaccine = c("HPV", "HPV"),
+                                                      activity_type = c("routine", "campaign"),
+                                                      year_intro = c(2027, NA))),
+              src = src,
+              proj_rul = list(
+                rule1 = list(catch_up_with_x = list(year_from = 2027, year_to = 2030, vaccine_x_level = 0.7), # rule 1 for HPV routine
+                             non_linear_scale_up = list(year_from = 2031, year_to = 2035, endpoint = 0.9)),
+                rule2 = list(sia_catch_up = list(vaccine_base = "HPV", sia_level = 0.9, age_from = 10, age_to = 15)) ## rule 2 for initial mac campaign if future intro
+              )
+)
+dat <- vac_sce(input)
+
+## example 6 - Mena historical + non-linear scale-up; manually defined future intro + various rules; db sia for past and future projection for initial mac
+## this has to be two-steps, as campaign projection depends on routine projections
+input <- list(params = list(region = region,
+                            disease = "MenA",
+                            proportion_risk = 0.9,
+                            year_cur = year_cur,
+                            introduction = data.frame(vaccine = c("MenA", "MenA"),
+                                                      activity_type = c("routine", "campaign"),
+                                                      year_intro = c(2023, NA))),
+              src = src,
+              proj_rul = list(
+                rule1 = list(catch_up_with_x = list(year_from = 2023, year_to = 2026, vaccine_x_level = 0.7), # rule 1 for MenA routine
+                             non_linear_scale_up = list(year_from = 2027, year_to = 2030, endpoint = 0.9)),
+                rule2 = list(sia_catch_up = list(vaccine_base = "MenA", sia_level = 0.9, age_from = 1, age_to = 29)) ## rule 2 for initial mac campaign if future intro
+              )
+)
+dat <- vac_sce(input)
+
+## example 7 - Cholera
+input <- list(params = list(region = region,
+                            disease = "Cholera",
+                            year_cur = year_cur,
+                            introduction = data.frame(vaccine = c("Cholera"),
+                                                      activity_type = c("campaign"),
+                                                      year_intro = c(NA))),
+              src = src,
+              proj_rul = list(
+                rule1 = list(sia_recurrent = list(year_from = 2020, year_to = 2030, frequency = 3, sia_level = 0.3, age_from = 1, age_to = 60))
+              )
+)
+dat <- vac_sce(input) # coverage scenario generation
+

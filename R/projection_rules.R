@@ -5,11 +5,11 @@
 #' @param level coverage level
 keep_levels <- function(d, year_from, year_to, level){
   t <- d[1, ] %>%
-    select(-year) %>%
+    dplyr::select(-year) %>%
     merge(data.frame(year = year_from:year_to)) %>%
-    mutate(coverage = level) %>%
-    bind_rows(d) %>%
-    arrange(year)
+    dplyr::mutate(coverage = level) %>%
+    dplyr::bind_rows(d) %>%
+    dplyr::arrange(year)
   return(t)
 }
 
@@ -22,14 +22,14 @@ keep_levels <- function(d, year_from, year_to, level){
 incremental <- function(d, year_from, year_to, step, cap = 0.95){
   y <- max(d$year)
   t <- d[d$year == y, ] %>%
-    select(-year) %>%
+    dplyr::select(-year) %>%
     merge(data.frame(year = year_from:year_to)) %>%
-    mutate(coverage = coverage + step*(year - y)) %>%
-    bind_rows(d) %>%
-    arrange(year)
+    dplyr::mutate(coverage = coverage + step*(year - y)) %>%
+    dplyr::bind_rows(d) %>%
+    dplyr::arrange(year)
   cap <- max(c(cap, max(d$coverage))) # cap at specified or historical highest
   t <- t %>%
-    mutate(coverage = ifelse(coverage > cap, cap, coverage))
+    dplyr::mutate(coverage = ifelse(coverage > cap, cap, coverage))
   return(t)
 }
 
@@ -53,7 +53,7 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
     message("intro_level is not used as not applicable")
     cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, vaccine_x_level)
   }
-  dat <- bind_rows(d, data_frame(year = years, coverage = cov))
+  dat <- dplyr::bind_rows(d, data_frame(year = years, coverage = cov))
   return(dat)
 }
 
@@ -66,7 +66,7 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
 non_linear_scale_up <- function(d, year_from, year_to, endpoint){
   years <- seq(year_from, year_to, 1)
   cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, endpoint)
-  dat <- bind_rows(d, data.frame(year = years, coverage = cov))
+  dat <- dplyr::bind_rows(d, data.frame(year = years, coverage = cov))
   return(dat)
 }
 
@@ -140,7 +140,8 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
                   age_from = age_from,
                   age_to = age_to)
 
-  return(bind_rows(d, t))
+  dat <- dplyr::bind_rows(d, t)
+  return(dat)
 }
 
 #' campaign coverage projection rule - one-off catch-up campaigns, specifically initial catch-up and mini-catch-up that targets missing cohorts
@@ -187,7 +188,8 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
                     age_from = age_from,
                     age_to = age_to)
   }
-  return(bind_rows(d, t))
+  dat <- dplyr::bind_rows(d, t)
+  return(dat)
 }
 
 #' campaign coverage projection rule - recurrent campaigns, e.g. cholera
@@ -210,7 +212,7 @@ sia_recurrent <- function(d, dat = NULL, year_from, year_to, frequency, sia_leve
                   coverage = sia_level,
                   age_from = age_from,
                   age_to = age_to) %>%
-    bind_rows(d) %>%
-    arrange(year)
+    dplyr::bind_rows(d) %>%
+    dplyr::arrange(year)
   return(t)
 }
