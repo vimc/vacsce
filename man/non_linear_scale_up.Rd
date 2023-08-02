@@ -5,7 +5,15 @@
 \title{routine coverage projection rule -  ia2030 non-linear scale-up
 this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly}
 \usage{
-non_linear_scale_up(d, year_from, year_to, endpoint)
+non_linear_scale_up(
+  d,
+  year_from,
+  year_to,
+  endpoint,
+  gender = NULL,
+  age_from = NULL,
+  age_to = NULL
+)
 }
 \arguments{
 \item{d}{a data frame containing at least (year, coverage)}
@@ -15,6 +23,12 @@ non_linear_scale_up(d, year_from, year_to, endpoint)
 \item{year_to}{year to}
 
 \item{endpoint}{coverage level in year_to}
+
+\item{gender}{1 for both, 2 for males, 3 for females}
+
+\item{age_from}{age_from}
+
+\item{age_to}{age_to}
 }
 \description{
 routine coverage projection rule -  ia2030 non-linear scale-up

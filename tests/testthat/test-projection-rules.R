@@ -114,7 +114,7 @@ test_that("sia_catch_up",{
     dplyr::mutate(vaccine = "A", activity_type = "routine")
   dd <- data_frame(year = NA, coverage = NA)
   expect_equal(2020,
-               sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 10, age_to = 15)[["year"]],
+               sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 10, age_to = 15, gender = 3)[["year"]],
                ignore_attr = TRUE)
 
   ## sia in routine intro year as mini-catch-up targeting only missed cohorts
@@ -126,9 +126,9 @@ test_that("sia_catch_up",{
     dplyr::mutate(vaccine = "A", activity_type = "routine")
   dd <- data_frame(year = 2018, coverage = 0.8, age_from = 1, age_to = 29)
   expect_equal(c(2018, 2022),
-               sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 1, age_to = 29)[["year"]],
+               sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 1, age_to = 29, gender = 1)[["year"]],
                ignore_attr = TRUE)
   expect_equal(c(29, 4),
-               sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 1, age_to = 29)[["age_to"]],
+               sia_catch_up(dd, dat, vaccine_base = "A", sia_level = 0.9, age_from = 1, age_to = 29, gender = 1)[["age_to"]],
                ignore_attr = TRUE)
 })

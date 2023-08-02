@@ -5,7 +5,16 @@
 \title{routine coverage projection rule - catch up with certain vaccine
 this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly}
 \usage{
-catch_up_with_x(d, year_from, year_to, vaccine_x_level, intro_level = 1/3)
+catch_up_with_x(
+  d,
+  year_from,
+  year_to,
+  vaccine_x_level,
+  intro_level = 1/3,
+  gender = NULL,
+  age_from = NULL,
+  age_to = NULL
+)
 }
 \arguments{
 \item{d}{a data frame containing at least (year, coverage)}
@@ -17,6 +26,12 @@ catch_up_with_x(d, year_from, year_to, vaccine_x_level, intro_level = 1/3)
 \item{vaccine_x_level}{coverage level of the vaccine to catch up with in year_to}
 
 \item{intro_level}{determines coverage level in year_from at vaccine_x_level*intro_level}
+
+\item{gender}{1 for both, 2 for males, 3 for females}
+
+\item{age_from}{age_from}
+
+\item{age_to}{age_to}
 }
 \description{
 routine coverage projection rule - catch up with certain vaccine

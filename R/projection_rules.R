@@ -3,11 +3,25 @@
 #' @param year_from year from
 #' @param year_to year to
 #' @param level coverage level
-keep_levels <- function(d, year_from, year_to, level){
+#' @param gender 1 for both, 2 for males, 3 for females
+#' @param age_from age_from
+#' @param age_to age_to
+keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = NULL, age_to = NULL){
   t <- d[1, ] %>%
     dplyr::select(-year) %>%
     merge(data.frame(year = year_from:year_to)) %>%
-    dplyr::mutate(coverage = level) %>%
+    dplyr::mutate(coverage = level)
+
+  if(!is.null(gender)){
+    t$gender <- gender
+  }
+  if(!is.null(age_from)){
+    t$age_from <- age_from
+  }
+  if(!is.null(age_to)){
+    t$age_to <- age_to
+  }
+  t <- t %>%
     dplyr::bind_rows(d) %>%
     dplyr::arrange(year)
   return(t)
@@ -19,12 +33,25 @@ keep_levels <- function(d, year_from, year_to, level){
 #' @param year_to year to
 #' @param step incremental level, e.g. 1% annual increase
 #' @param cap threshold capping coverage, this will be replaced by historical peak in d if applicable
-incremental <- function(d, year_from, year_to, step, cap = 0.95){
+#' @param gender 1 for both, 2 for males, 3 for females
+#' @param age_from age_from
+#' @param age_to age_to
+incremental <- function(d, year_from, year_to, step, cap = 0.95, gender = NULL, age_from = NULL, age_to = NULL){
   y <- max(d$year)
   t <- d[d$year == y, ] %>%
     dplyr::select(-year) %>%
     merge(data.frame(year = year_from:year_to)) %>%
-    dplyr::mutate(coverage = coverage + step*(year - y)) %>%
+    dplyr::mutate(coverage = coverage + step*(year - y))
+  if(!is.null(gender)){
+    t$gender <- gender
+  }
+  if(!is.null(age_from)){
+    t$age_from <- age_from
+  }
+  if(!is.null(age_to)){
+    t$age_to <- age_to
+  }
+  t <- t %>%
     dplyr::bind_rows(d) %>%
     dplyr::arrange(year)
   cap <- max(c(cap, max(d$coverage))) # cap at specified or historical highest
@@ -40,7 +67,10 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95){
 #' @param year_to year to
 #' @param vaccine_x_level coverage level of the vaccine to catch up with in year_to
 #' @param intro_level determines coverage level in year_from at vaccine_x_level*intro_level
-catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level = 1/3){
+#' @param gender 1 for both, 2 for males, 3 for females
+#' @param age_from age_from
+#' @param age_to age_to
+catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level = 1/3, gender = NULL, age_from = NULL, age_to = NULL){
   years <- seq(year_from, year_to, 1)
   cov <- rep(NA, length(years))
   d <- d[is.numeric(d$year) & d$year > 0,]
@@ -53,7 +83,17 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
     message("intro_level is not used as not applicable")
     cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, vaccine_x_level)
   }
-  dat <- dplyr::bind_rows(d, data_frame(year = years, coverage = cov))
+  t <- data_frame(year = years, coverage = cov)
+  if(!is.null(gender)){
+    t$gender <- gender
+  }
+  if(!is.null(age_from)){
+    t$age_from <- age_from
+  }
+  if(!is.null(age_to)){
+    t$age_to <- age_to
+  }
+  dat <- dplyr::bind_rows(d, t)
   return(dat)
 }
 
@@ -63,10 +103,23 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
 #' @param year_from year from
 #' @param year_to year to
 #' @param endpoint coverage level in year_to
-non_linear_scale_up <- function(d, year_from, year_to, endpoint){
+#' @param gender 1 for both, 2 for males, 3 for females
+#' @param age_from age_from
+#' @param age_to age_to
+non_linear_scale_up <- function(d, year_from, year_to, endpoint, gender = NULL, age_from = NULL, age_to = NULL){
   years <- seq(year_from, year_to, 1)
   cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, endpoint)
-  dat <- dplyr::bind_rows(d, data.frame(year = years, coverage = cov))
+  t <- data.frame(year = years, coverage = cov)
+  if(!is.null(gender)){
+    t$gender <- gender
+  }
+  if(!is.null(age_from)){
+    t$age_from <- age_from
+  }
+  if(!is.null(age_to)){
+    t$age_to <- age_to
+  }
+  dat <- dplyr::bind_rows(d, t)
   return(dat)
 }
 
@@ -138,7 +191,8 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
   t <- data.frame(year = t,
                   coverage = sia_level,
                   age_from = age_from,
-                  age_to = age_to)
+                  age_to = age_to,
+                  gender = gender)
 
   dat <- dplyr::bind_rows(d, t)
   return(dat)
@@ -178,7 +232,8 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
       t <- data.frame(year = year_intro,
                       coverage = sia_level,
                       age_from = age_from,
-                      age_to = age_to)
+                      age_to = age_to,
+                      gender = gender)
     } else {
       return(NULL)
     }
@@ -186,7 +241,8 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
     t <- data.frame(year = year_intro,
                     coverage = sia_level,
                     age_from = age_from,
-                    age_to = age_to)
+                    age_to = age_to,
+                    gender = gender)
   }
   dat <- dplyr::bind_rows(d, t)
   return(dat)
@@ -211,7 +267,8 @@ sia_recurrent <- function(d, dat = NULL, year_from, year_to, frequency, sia_leve
   t <- data.frame(year = seq(year_from, year_to, frequency),
                   coverage = sia_level,
                   age_from = age_from,
-                  age_to = age_to) %>%
+                  age_to = age_to,
+                  gender = gender) %>%
     dplyr::bind_rows(d) %>%
     dplyr::arrange(year)
   return(t)

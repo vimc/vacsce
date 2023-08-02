@@ -4,7 +4,15 @@
 \alias{keep_levels}
 \title{routine coverage projection rule - keep future coverage at certain level}
 \usage{
-keep_levels(d, year_from, year_to, level)
+keep_levels(
+  d,
+  year_from,
+  year_to,
+  level,
+  gender = NULL,
+  age_from = NULL,
+  age_to = NULL
+)
 }
 \arguments{
 \item{d}{a data frame containing at least (year, coverage)}
@@ -14,6 +22,12 @@ keep_levels(d, year_from, year_to, level)
 \item{year_to}{year to}
 
 \item{level}{coverage level}
+
+\item{gender}{1 for both, 2 for males, 3 for females}
+
+\item{age_from}{age_from}
+
+\item{age_to}{age_to}
 }
 \description{
 routine coverage projection rule - keep future coverage at certain level

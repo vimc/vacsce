@@ -13,7 +13,7 @@
 #' src is a list (example below)
 #' <- list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
 #' coverage source data frame must contain columns below
-#' c("country", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
+#' c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
 input_check <- function(input){
   ## saninty check for input
   ## 1.) check input$params
@@ -143,7 +143,7 @@ vac_sce <- function(input){
     d1 <- fut %>%
       dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
     d <- d0 %>%
-      dplyr::select(year, coverage, age_from, age_to) %>%
+      dplyr::select(year, coverage, age_from, age_to, gender) %>%
       dplyr::filter(!is.na(year)) %>%
       dplyr::arrange(year)
     r <- input$proj_rul[[i]] # projection rules

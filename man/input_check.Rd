@@ -20,7 +20,7 @@ params is a list (example below)
 src is a list (example below)
 <- list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
 coverage source data frame must contain columns below
-c("country", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")}
+c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")}
 }
 \description{
 saninty check for input date

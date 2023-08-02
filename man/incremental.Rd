@@ -4,7 +4,16 @@
 \alias{incremental}
 \title{routine coverage projection rule - annual incremental to certain threshold}
 \usage{
-incremental(d, year_from, year_to, step, cap = 0.95)
+incremental(
+  d,
+  year_from,
+  year_to,
+  step,
+  cap = 0.95,
+  gender = NULL,
+  age_from = NULL,
+  age_to = NULL
+)
 }
 \arguments{
 \item{d}{a data frame containing at least (year, coverage)}
@@ -16,6 +25,12 @@ incremental(d, year_from, year_to, step, cap = 0.95)
 \item{step}{incremental level, e.g. 1% annual increase}
 
 \item{cap}{threshold capping coverage, this will be replaced by historical peak in d if applicable}
+
+\item{gender}{1 for both, 2 for males, 3 for females}
+
+\item{age_from}{age_from}
+
+\item{age_to}{age_to}
 }
 \description{
 routine coverage projection rule - annual incremental to certain threshold
