@@ -89,7 +89,7 @@ input_check <- function(input){
   } else {
     input$his <- his
     input$introduction <- input$params$introduction
-    print("No historical routine data identified.")
+    message("No historical routine data identified.")
   }
 
   input$fut <- fut # future coverage is used for each delivery if no corresponding projection rule(s) specified
@@ -137,7 +137,7 @@ vac_sce <- function(input){
   dat <- NULL
   for(i in seq_len(x)){
     # for each vaccine delivery do scenario projection
-    print(sprintf("projecting trajectory for %s %s", input$introduction$activity_type[i], input$introduction$vaccine[i]))
+    message(sprintf("projecting trajectory for %s %s", input$introduction$activity_type[i], input$introduction$vaccine[i]))
     d0 <- his %>%
       dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
     d1 <- fut %>%
@@ -154,19 +154,19 @@ vac_sce <- function(input){
       ## hence need to be run separately
       for(j in seq_len(length(r))){
         func <- paste0(names(r[j]), sub("list\\(", "(d, ", paste(r[j])))
-        print(func)
+        message(func)
         d <- eval(parse(text = func))
       }
       dat <- bind_rows(dat, d %>% bind_cols(input$introduction[i, c("vaccine", "activity_type")]))
     } else if(is.null(r)){
-      print("No projection. Binding data from source coverage.")
+      message("No projection. Binding data from source coverage.")
       dat <- bind_rows(dat, d0, d1)
     } else {
       ## campaign projection
       for(j in seq_len(length(r))){
         func <- paste0(names(r[j]), sub("list\\(", "(d, dat, ", paste(r[j])))
         func <- gsub('\"', "'", func, fixed = TRUE)
-        print(func)
+        message(func)
         dat <- eval(parse(text = func)) %>%
           merge(input$introduction[i, c("vaccine", "activity_type")]) %>%
           dplyr::bind_rows(dat)
