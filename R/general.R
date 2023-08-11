@@ -50,12 +50,12 @@ input_check <- function(input){
   }
 
   ## filter data by params specified
-  his <-  input$src$historic %>%
+  historic <-  input$src$historic %>%
     dplyr::filter(region == !!region) %>%
     dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type")) %>%
     dplyr::filter(!is.na(year))
 
-  fut <-  input$src$future %>%
+  future <-  input$src$future %>%
     dplyr::filter(region == !!region) %>%
     dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))%>%
     dplyr::filter(!is.na(year))
@@ -64,8 +64,8 @@ input_check <- function(input){
   ## merge data source and user specified introduction dates
   ## NA introduction will be replaced by input$src$historical
   ## non-NA introduction will over-write input$src$historical
-  if (nrow(his[his$activity_type != "campaign", ]) > 0){
-    s <- his %>% group_by(vaccine, activity_type) %>%
+  if (nrow(historic[historic$activity_type != "campaign", ]) > 0){
+    s <- historic %>% group_by(vaccine, activity_type) %>%
       dplyr::filter(activity_type != "campaign") %>%
       dplyr::summarise(year_intro_src = min(year), .groups = "keep") %>%
       as.data.frame() %>%
@@ -84,18 +84,18 @@ input_check <- function(input){
                                 TRUE ~ year_intro)) %>%
       dplyr::select(vaccine, activity_type, year_intro, conflict) %>%
       dplyr::mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur)
-    input$his <- his %>%
+    input$historic <- historic %>%
       dplyr::right_join(input$introduction %>%
                           dplyr::filter(!future_introduction & !conflict),
                         by = join_by("vaccine", "activity_type")) %>%
       dplyr::select(-year_intro, - future_introduction, -conflict)
   } else {
-    input$his <- his
+    input$historic <- historic
     input$introduction <- input$params$introduction
     message("No historical routine data identified.")
   }
 
-  input$fut <- fut # future coverage is used for each delivery if no corresponding projection rule(s) specified
+  input$future <- future # future coverage is used for each delivery if no corresponding projection rule(s) specified
 
   ## 4.) satiny check for rules
   for(j in seq_len(length(input$proj_rul))){
@@ -126,18 +126,18 @@ input_check <- function(input){
 vac_sce <- function(input){
   ## log scenario generation messages.
   input <- input_check(input)
-  his <- input$his
-  fut <- input$fut
+  historic <- input$historic
+  future <- input$future
   x <- nrow(input$introduction)
 
   ## scale routine coverage by proportion_risk for projection
   ## run projection rules
   ## scale routine coverage back by proportion risk
-  his <- his %>%
+  historic <- historic %>%
     mutate(coverage =
              dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
                               TRUE ~ coverage))
-  fut <- fut %>%
+  future <- future %>%
     mutate(coverage =
              dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
                               TRUE ~ coverage))
@@ -146,9 +146,9 @@ vac_sce <- function(input){
   for(i in seq_len(x)){
     # for each vaccine delivery do scenario projection
     message(sprintf("projecting trajectory for %s %s", input$introduction$activity_type[i], input$introduction$vaccine[i]))
-    d0 <- his %>%
+    d0 <- historic %>%
       dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
-    d1 <- fut %>%
+    d1 <- future %>%
       dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
     d <- d0 %>%
       dplyr::select(year, coverage, age_from, age_to, gender) %>%
