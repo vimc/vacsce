@@ -1,6 +1,6 @@
 ## ia2030 non-linear function
 ## Carter et al. 2023 https://www.sciencedirect.com/science/article/pii/S0264410X2300854X
-IA2030_projection <- function(year_base, coverage_base, year_target, coverage_target){
+ia2030_projection <- function(year_base, coverage_base, year_target, coverage_target){
   ## per country, per vaccine
   stopifnot(year_base < year_target)
   if(year_target-year_base == 1L){

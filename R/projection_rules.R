@@ -80,11 +80,11 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
   if (nrow(d) == 0){
     ## routine introduction
     cov[1] <- vaccine_x_level*intro_level # intro at 33% of target vaccine by default (see args)
-    cov[-1] <- IA2030_projection(year_from, cov[1], year_to, vaccine_x_level)
+    cov[-1] <- ia2030_projection(year_from, cov[1], year_to, vaccine_x_level)
   } else {
     ## non-linear scale-up
     message("intro_level is not used as not applicable")
-    cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, vaccine_x_level)
+    cov <- ia2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, vaccine_x_level)
   }
   t <- data_frame(year = years, coverage = cov)
   if(!is.null(gender)){
@@ -112,7 +112,7 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
 #' @export
 non_linear_scale_up <- function(d, year_from, year_to, endpoint, gender = NULL, age_from = NULL, age_to = NULL){
   years <- seq(year_from, year_to, 1)
-  cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, endpoint)
+  cov <- ia2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, endpoint)
   t <- data.frame(year = years, coverage = cov)
   if(!is.null(gender)){
     t$gender <- gender
