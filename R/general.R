@@ -67,7 +67,7 @@ input_check <- function(input){
   if (nrow(his[his$activity_type != "campaign", ]) > 0){
     s <- his %>% group_by(vaccine, activity_type) %>%
       dplyr::filter(activity_type != "campaign") %>%
-      summarise(year_intro_src = min(year), .groups = "keep") %>%
+      dplyr::summarise(year_intro_src = min(year), .groups = "keep") %>%
       as.data.frame() %>%
       dplyr::right_join(introduction, by = c("vaccine", "activity_type")) %>%
       dplyr::mutate(conflict = (!is.na(year_intro) & !is.na(year_intro_src) & year_intro != year_intro_src))
