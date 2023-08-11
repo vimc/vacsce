@@ -1,17 +1,18 @@
 ## ia2030 non-linear function
-IA2030_projection <- function(t0, c0, T, cT){
+## Carter et al. 2023 https://www.sciencedirect.com/science/article/pii/S0264410X2300854X
+IA2030_projection <- function(year_base, coverage_base, year_target, coverage_target){
   ## per country, per vaccine
-  stopifnot(t0 < T)
-  if(T-t0 == 1){
-    return(c(cT))
+  stopifnot(year_base < year_target)
+  if(year_target-year_base == 1L){
+    return(c(coverage_target))
   } else {
-    v <- seq_len(T - t0 -1)
-    k <- log((1-cT)/(1-c0)) / (T-t0)
-    l <- 1-c0
+    v <- seq_len(year_target - year_base -1)
+    k <- log((1-coverage_target)/(1-coverage_base)) / (year_target-year_base)
+    l <- 1-coverage_base
     for(i in seq_along(v)){
       v[i] <- 1 - l*exp(i * k)
     }
-    return(c(v, cT))
+    return(c(v, coverage_target))
   }
 }
 

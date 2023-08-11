@@ -43,7 +43,7 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95, gender = NULL, 
   t <- d[d$year == max_y, ] %>% # this is just to grab one row in source data for information like region, vaccine, activity_type, age groups, etc.
     dplyr::select(-year) %>%
     dplyr::cross_join(data.frame(year = year_from:year_to)) %>%
-    dplyr::mutate(coverage = coverage + step*(year - y))
+    dplyr::mutate(coverage = coverage + step*(year - max_y))
   if(!is.null(gender)){
     t$gender <- gender
   }
@@ -178,7 +178,7 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
 
   ## project future campaigns from y_base to year_to
   i <- y_base
-  t <- NULL
+  year <- NULL
   while (i < year_to) {
     ## evaluate vaccine_base, and determine next sia year
     if(b$coverage[b$year == i] < 0.6){
@@ -191,9 +191,9 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
     if (i < y_current){
       i <- y_current + 1
     }
-    t <- c(t, i)
+    year <- c(year, i)
   }
-  t <- data.frame(year = t,
+  t <- data.frame(year = year,
                   coverage = sia_level,
                   age_from = age_from,
                   age_to = age_to,
