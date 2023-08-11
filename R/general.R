@@ -165,10 +165,10 @@ vac_sce <- function(input){
         message(func)
         d <- eval(parse(text = func))
       }
-      dat <- bind_rows(dat, d %>% bind_cols(input$introduction[i, c("vaccine", "activity_type")]))
+      dat <- dplyr::bind_rows(dat, d %>% bind_cols(input$introduction[i, c("vaccine", "activity_type")]))
     } else if(is.null(r)){
       message("No projection. Binding data from source coverage.")
-      dat <- bind_rows(dat, d0, d1)
+      dat <- dplyr::bind_rows(dat, d0, d1)
     } else {
       ## campaign projection
       for(j in seq_len(length(r))){
@@ -176,7 +176,8 @@ vac_sce <- function(input){
         func <- gsub('\"', "'", func, fixed = TRUE)
         message(func)
         dat <- eval(parse(text = func)) %>%
-          merge(input$introduction[i, c("vaccine", "activity_type")]) %>%
+          #right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") ) %>%
+          bind_cols(input$introduction[i, c("vaccine", "activity_type")])
           dplyr::bind_rows(dat)
       }
     }
@@ -205,6 +206,7 @@ generate_example_data <- function(con){
   # hpv: catch-up + future routine intro
   # mena: catch-up + mini-catch-up + future routine intro
   # anonymous region
+  # region are shown as integers, which are country.nid in montagu database
   t <- data.frame(region = c(324, 324, 324, 50, 50, 108, 108),
                   disease =  c("Measles", "Measles", "Measles", "HPV", "HPV", "MenA", "MenA"),
                   vaccine = c("MCV1", "MCV2", "Measles", "HPV", "HPV", "MenA", "MenA"),
@@ -218,7 +220,7 @@ generate_example_data <- function(con){
                              "AND coverage > 0",
                              "AND year <= 2030"),
                        list(touch)) %>%
-    right_join(t, by = c("region", "vaccine", "activity_type")) %>%
-    mutate(region = "ISO", target = NA, coverage = coverage * runif(1, 0.9,1.1))
+    dplyr::right_join(t, by = c("region", "vaccine", "activity_type")) %>%
+    dplyr::mutate(region = "ISO", target = NA, coverage = coverage * runif(1, 0.9,1.1))
   write.csv(d, "inst/example_data.csv", row.names = FALSE)
 }
