@@ -76,7 +76,7 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
   d <- d[is.numeric(d$year) & d$year > 0,]
   if (nrow(d) == 0){
     ## routine introduction
-    cov[1] <- vaccine_x_level*intro_level # intro at 33% of target vaccine
+    cov[1] <- vaccine_x_level*intro_level # intro at 33% of target vaccine by default (see args)
     cov[-1] <- IA2030_projection(year_from, cov[1], year_to, vaccine_x_level)
   } else {
     ## non-linear scale-up
