@@ -10,7 +10,7 @@
 keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = NULL, age_to = NULL){
   t <- d[1, ] %>%
     dplyr::select(-year) %>%
-    merge(data.frame(year = year_from:year_to)) %>%
+    dplyr::cross_join(data.frame(year = year_from:year_to)) %>%
     dplyr::mutate(coverage = level)
 
   if(!is.null(gender)){
@@ -39,10 +39,10 @@ keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = 
 #' @param age_to age_to
 #' @export
 incremental <- function(d, year_from, year_to, step, cap = 0.95, gender = NULL, age_from = NULL, age_to = NULL){
-  y <- max(d$year)
-  t <- d[d$year == y, ] %>%
+  max_y <- max(d$year)
+  t <- d[d$year == max_y, ] %>% # this is just to grab one row in source data for information like region, vaccine, activity_type, age groups, etc.
     dplyr::select(-year) %>%
-    merge(data.frame(year = year_from:year_to)) %>%
+    dplyr::cross_join(data.frame(year = year_from:year_to)) %>%
     dplyr::mutate(coverage = coverage + step*(year - y))
   if(!is.null(gender)){
     t$gender <- gender
