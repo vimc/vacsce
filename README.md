@@ -1,22 +1,5 @@
 # vacsce
-R package for vaccine scenario generation.
+R package for vaccine scenario generation. vacsce stands for vaccination scenarios. It provides a set of coverage projection rules.
 
 ## Objectives
-To be able to generate various coverage scenarios in a structured and automated way.
-
-## Date Sources
-- Open sources:
-WHO-UNICEF routine immunistaion coverage
-WHO campaign data
-
-- Private/trusted sources:
-Gavi
-Modelling groups
-
-## Input
-
-- Internal input
-Montagu database
-
-- External input
-User defined input following montagu conventions
+The initial objective was to document commonly used coverage projection rules and work as a tool for VIMC's model runs, interim-update and related analysis. As VIMC continues expanding its collaboration with greater public health community, we further release vacsce as a package for external users who share common interests such as planning for immunization programs, assessment of vaccine impact, etc.
