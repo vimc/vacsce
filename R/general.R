@@ -78,7 +78,7 @@ input_check <- function(input){
               or make sure your projection rule is set up correctly")
     }
     input$introduction <- s %>%
-      dplyr::mutate(year_intro = # ifelse(is.na(year_intro), year_intro_src, year_intro)) %>%
+      dplyr::mutate(year_intro =
                       case_when(is.na(year_intro) ~ year_intro_src,
                                 TRUE ~ year_intro)) %>%
       dplyr::select(vaccine, activity_type, year_intro, conflict) %>%
@@ -132,13 +132,13 @@ vac_sce <- function(input){
   ## run projection rules
   ## scale routine coverage back by proportion risk
   his <- his %>%
-    mutate(coverage = #ifelse(activity_type == "routine", coverage/input$params$proportion_risk, coverage))
+    mutate(coverage =
              dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
-                                         TRUE ~ coverage))
+                              TRUE ~ coverage))
   fut <- fut %>%
-    mutate(coverage = #ifelse(activity_type == "routine", coverage/input$params$proportion_risk, coverage))
-             coverage = dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
-                                         TRUE ~ coverage))
+    mutate(coverage =
+             dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
+                              TRUE ~ coverage))
 
   dat <- NULL
   for(i in seq_len(x)){
@@ -181,12 +181,12 @@ vac_sce <- function(input){
   }
   dat <- dat %>%
     dplyr::mutate(region = input$params$region,
-           disease = input$params$disease,
-           proportion_risk =input$params$proportion_risk) %>%
-    dplyr::mutate(#coverage = ifelse(activity_type == "routine", coverage*input$params$proportion_risk, coverage)
-                  coverage = dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
-                                              TRUE ~ coverage)
-                  )
+                  disease = input$params$disease,
+                  proportion_risk =input$params$proportion_risk) %>%
+    dplyr::mutate(coverage =
+                    dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
+                                     TRUE ~ coverage)
+    )
 
   return(dat)
 }

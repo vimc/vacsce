@@ -498,6 +498,7 @@ This is a simple example assuming that there is a Cholera campaign every three y
 # input set-up
 input <- list(params = list(region = region,
                             disease = "Cholera",
+                            proportion_risk = 0.5,
                             year_cur = year_cur,
                             introduction = data.frame(vaccine = c("Cholera"),
                                                       activity_type = c("campaign"),
