@@ -134,11 +134,11 @@ vac_sce <- function(input){
   ## run projection rules
   ## scale routine coverage back by proportion risk
   historic <- historic %>%
-    mutate(coverage =
+    dplyr::mutate(coverage =
              dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
                               TRUE ~ coverage))
   future <- future %>%
-    mutate(coverage =
+    dplyr::mutate(coverage =
              dplyr::case_when(activity_type == "routine" ~ coverage*input$params$proportion_risk,
                               TRUE ~ coverage))
 
