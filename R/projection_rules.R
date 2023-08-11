@@ -6,6 +6,7 @@
 #' @param gender 1 for both, 2 for males, 3 for females
 #' @param age_from age_from
 #' @param age_to age_to
+#' @export
 keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = NULL, age_to = NULL){
   t <- d[1, ] %>%
     dplyr::select(-year) %>%
@@ -36,6 +37,7 @@ keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = 
 #' @param gender 1 for both, 2 for males, 3 for females
 #' @param age_from age_from
 #' @param age_to age_to
+#' @export
 incremental <- function(d, year_from, year_to, step, cap = 0.95, gender = NULL, age_from = NULL, age_to = NULL){
   y <- max(d$year)
   t <- d[d$year == y, ] %>%
@@ -70,6 +72,7 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95, gender = NULL, 
 #' @param gender 1 for both, 2 for males, 3 for females
 #' @param age_from age_from
 #' @param age_to age_to
+#' @export
 catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level = 1/3, gender = NULL, age_from = NULL, age_to = NULL){
   years <- seq(year_from, year_to, 1)
   cov <- rep(NA, length(years))
@@ -106,6 +109,7 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
 #' @param gender 1 for both, 2 for males, 3 for females
 #' @param age_from age_from
 #' @param age_to age_to
+#' @export
 non_linear_scale_up <- function(d, year_from, year_to, endpoint, gender = NULL, age_from = NULL, age_to = NULL){
   years <- seq(year_from, year_to, 1)
   cov <- IA2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, endpoint)
@@ -136,6 +140,7 @@ non_linear_scale_up <- function(d, year_from, year_to, endpoint, gender = NULL, 
 #' @param age_from campaign target age from
 #' @param age_to campaign target age to
 #' @param  gender 1 for both, 2 for males, 3 for females
+#' @export
 sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5, gender = 1){
   ## vaccine_base is a baseline vaccine for evaluating follow-up campaign frequency
   ## evaluate vaccine_base levels from a baseline year
@@ -206,6 +211,7 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
 #' @param age_from campaign target age from
 #' @param age_to campaign target age to
 #' @param gender 1 for both, 2 for males, 3 for females
+#' @export
 sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gender){
   ## this is relevant to MenA, Typhoid, and HPV mult-cohort SIAs before routine introduction
   ## we need are year_intro and age groups
@@ -258,6 +264,7 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
 #' @param age_from campaign target age from
 #' @param age_to campaign target age to
 #' @param  gender 1 for both, 2 for males, 3 for females
+#' @export
 sia_recurrent <- function(d, dat = NULL, year_from, year_to, frequency, sia_level, age_from, age_to, gender){
 
   if(nrow(d[d$activity_type == "campaign", ]) > 0){

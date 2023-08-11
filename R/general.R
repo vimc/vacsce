@@ -14,6 +14,7 @@
 #' <- list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
 #' coverage source data frame must contain columns below
 #' c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
+#' @export
 input_check <- function(input){
   ## saninty check for input
   ## 1.) check input$params
@@ -121,6 +122,7 @@ input_check <- function(input){
 #' generate vaccination scenario according to input
 #' @param input
 #' for details of setting up input, see input_check()
+#' @export
 vac_sce <- function(input){
   ## log scenario generation messages.
   input <- input_check(input)
