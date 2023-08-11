@@ -31,7 +31,7 @@ show_cols <- function(dat){
 
 ## 1. Introduction
 
-This vignette describes how to use **vacsce** to generate vaccination coverage scenarios. **vacsce** provides a set of coverage projection rules. Its initial objective was to document commonly used coverage projection rules and work as a tool for VIMC's model runs, interim-update and related analysis. As VIMC continues expanding its collaboration with greater public health community, we further plan to release **vacsce** as a tool for external users who share common interests such as planning for immunization programs, assessment of vaccine impact, etc.
+This vignette describes how to use **vacsce** to generate vaccination coverage scenarios. **vacsce** stands for **vac**cination **sce**narios. It provides a set of coverage projection rules. Its initial objective was to document commonly used coverage projection rules and work as a tool for VIMC's model runs, interim-update and related analysis. As VIMC continues expanding its collaboration with greater public health community, we further plan to release **vacsce** as a tool for external users who share common interests such as planning for immunization programs, assessment of vaccine impact, etc.
 
 ## 2. Future vaccination coverage projection rules
 
@@ -329,7 +329,7 @@ src <- list(historic = example_data[example_data$year <= year_cur & example_data
 ```
 
 **EXAMPLE 1**
-Example one works as a null run of **vacsce**. Without specification of projection rules, the package simply bind any historical and future coverage sources. In practice, a null run may be not useful at all for external users. However, for VIMC users, a null run works like combining historical and future from two data sources (e.g. touchstones).]
+Example one works as a null run of **vacsce**. Without specification of projection rules, the package simply bind any historical and future coverage sources. In practice, a null run may be not useful at all for external users. However, for VIMC users, a null run works by combining historical and future from two data sources (e.g. touchstones).
 
 ```{r} 
 ## example 1 - no projection rules, binding historical and future coverage source
@@ -408,7 +408,7 @@ show_cols(dat)
 
 **EXAMPLE 4**
 
-Comparing with example 3, example 4 have an additional campaign projection rule which projects future recurrent follow-up SIAs. Since campaign projection is dependent on routine projection, **vacsce** will prepare your input, and project routine and campaigns sequentially. You do not need to worry about the ordering of vaccine delivery in you input set-up. However, you need to make sure that the order of projection rules match the order of vaccine deliveries.
+Comparing with example 3, example 4 have an additional campaign projection rule which projects future recurrent follow-up SIAs. Since campaign projection is dependent on routine projection, **vacsce** will prepare your input, and project routine and campaigns sequentially. You need to make sure that the order of projection rules match the order of vaccine deliveries.
 
 ```{r} 
 ## example 4
