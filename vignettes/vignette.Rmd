@@ -136,7 +136,7 @@ show_cols(dat)
 d <- his[his$vaccine == "MCV1",]
 ```
 
-**non_linear_scale_up** refers to IA2030 non-linear scale up function (TBA: ref.). In the following example, the historical coverage of MCV1 for region ISO is `r  paste0(round(d$coverage[d$year == year_cur], 3)*100, "%")` in year `r year_cur`. **non_linear_scale_up** projects future coverage from `r year_cur+1` to 2030, where future coverage level non-linearly increases annually. Parameter **endpoint** sets the target coverage level in year 2030.
+**non_linear_scale_up** refers to IA2030 non-linear scale up function (Carter et al. 2023 https://www.sciencedirect.com/science/article/pii/S0264410X2300854X). In the following example, the historical coverage of MCV1 for region ISO is `r  paste0(round(d$coverage[d$year == year_cur], 3)*100, "%")` in year `r year_cur`. **non_linear_scale_up** projects future coverage from `r year_cur+1` to 2030, where future coverage level non-linearly increases annually. Parameter **endpoint** sets the target coverage level in year 2030.
 
 ```{r}
 dat <- non_linear_scale_up(d, year_from = year_cur + 1, 
