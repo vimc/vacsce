@@ -176,8 +176,7 @@ vac_sce <- function(input){
         func <- gsub('\"', "'", func, fixed = TRUE)
         message(func)
         dat <- eval(parse(text = func)) %>%
-          #right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") ) %>%
-          bind_cols(input$introduction[i, c("vaccine", "activity_type")])
+          dplyr::bind_cols(input$introduction[i, c("vaccine", "activity_type")]) %>%
           dplyr::bind_rows(dat)
       }
     }
