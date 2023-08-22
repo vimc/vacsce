@@ -165,7 +165,9 @@ vac_sce <- function(input){
         message(func)
         d <- eval(parse(text = func))
       }
-      dat <- dplyr::bind_rows(dat, d %>% bind_cols(input$introduction[i, c("vaccine", "activity_type")]))
+      dat <- d %>%
+        dplyr::bind_cols(input$introduction[i, c("vaccine", "activity_type")]) %>%
+        dplyr::bind_rows(dat)
     } else if(is.null(r)){
       message("No projection. Binding data from source coverage.")
       dat <- dplyr::bind_rows(dat, d0, d1)
@@ -175,10 +177,14 @@ vac_sce <- function(input){
         func <- paste0(names(r[j]), sub("list\\(", "(d, dat, ", paste(r[j])))
         func <- gsub('\"', "'", func, fixed = TRUE)
         message(func)
-        dat <- eval(parse(text = func)) %>%
-          dplyr::bind_cols(input$introduction[i, c("vaccine", "activity_type")]) %>%
-          dplyr::bind_rows(dat)
+        # dat <- eval(parse(text = func)) %>%
+        #   dplyr::bind_cols(input$introduction[i, c("vaccine", "activity_type")]) %>%
+        #   dplyr::bind_rows(dat)
+        d <- eval(parse(text = func))
       }
+      dat <- d %>%
+        dplyr::bind_cols(input$introduction[i, c("vaccine", "activity_type")]) %>%
+        dplyr::bind_rows(dat)
     }
   }
   dat <- dat %>%
