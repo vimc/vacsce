@@ -97,7 +97,7 @@ input_check <- function(input){
 
   input$future <- future # future coverage is used for each delivery if no corresponding projection rule(s) specified
 
-  ## 4.) satiny check for rules
+  ## 4.) sanity check for rules
   for(j in seq_len(length(input$proj_rul))){
     r <- input$proj_rul[[j]]
     x <- length(r)
@@ -107,10 +107,14 @@ input_check <- function(input){
       message(sprintf("%s projection rules identified for %s %s", x, input$introduction$activity_type[j], input$introduction$vaccine[j]))
     }
     for (i in seq_len(x)){
-      stopifnot(r[[i]]$year_from <= r[[i]]$year_to)
+      if("year_from" %in% names(r[[i]])){
+        stopifnot(r[[i]]$year_from <= r[[i]]$year_to)
+      }
       if(i < x){
-        if(r[[i]]$year_to+1 != r[[i+1]]$year_from){
-          stop("Please check continuity of time periods for projection")
+        if("year_to" %in% names(r[[i]]) & "year_from" %in% names(r[[i+1]])){
+          if(r[[i]]$year_to+1 != r[[i+1]]$year_from){
+            stop("Please check continuity of time periods for projection")
+          }
         }
       }
     }
