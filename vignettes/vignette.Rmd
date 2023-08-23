@@ -130,7 +130,7 @@ dat <- catch_up_with_x(d, year_from = year_cur + 3,
 show_cols(dat)
 ```
 
-### 2.4. Routine coverage projection rule - non_linear_scale_up**
+### 2.4. Routine coverage projection rule - non_linear_scale_up
 ```{r}
 # load historical coverage data
 d <- his[his$vaccine == "MCV1",]
@@ -222,7 +222,7 @@ show_cols(dat)
 
 ```
 
-**Situation A: With initial catch-up SIAs implemented before routine introduction**
+**Situation B: With initial catch-up SIAs implemented before routine introduction**
 ```{r}
 ## project baseline routine coverage trajectory
 dat <- catch_up_with_x(d3, year_from = 2023, 
@@ -246,7 +246,7 @@ dat <- sia_catch_up(d4, dat, vaccine_base = "MenA",
 show_cols(dat)
 ```
 
-### 2.7. Campaign projection rule - sia_recurrent**
+### 2.7. Campaign projection rule - sia_recurrent
 ## load historical coverage data
 ```{r}
 # load historical coverage data
