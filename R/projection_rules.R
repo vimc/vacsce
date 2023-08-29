@@ -185,8 +185,10 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
       i <- i + 2
     } else if(b$coverage[b$year == i] >= 0.8 & b$coverage[b$year == i] < 0.95){
       i <- i + 4
-    } else {
+    } else if(b$coverage[b$year == i] >= 0.6 & b$coverage[b$year == i] < 0.8){
       i <- i +3
+    } else {
+      i <- year_to
     }
     if (i < y_current){
       i <- y_current + 1
@@ -199,7 +201,8 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
                   age_to = age_to,
                   gender = gender)
 
-  dat <- dplyr::bind_rows(d, t)
+  dat <- dplyr::bind_rows(d, t) %>%
+    filter(year < year_to)
   return(dat)
 }
 

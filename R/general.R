@@ -45,21 +45,26 @@ input_check <- function(input){
   if(nrow(input$src$historic) > 0){
     assert_has_columns(input$src$historic, key_cols)
   }
-  if(nrow(input$src$future) > 0){
-    assert_has_columns(input$src$future, key_cols)
+  if(!is.null(input$src$future)){
+    if(nrow(input$src$future) > 0){
+      assert_has_columns(input$src$future, key_cols)
+    }
   }
+
 
   ## filter data by params specified
   historic <-  input$src$historic %>%
     dplyr::filter(region == !!region) %>%
     dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type")) %>%
     dplyr::filter(!is.na(year))
-
-  future <-  input$src$future %>%
-    dplyr::filter(region == !!region) %>%
-    dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))%>%
-    dplyr::filter(!is.na(year))
-
+  if(!is.null(input$src$future)){
+    future <-  input$src$future %>%
+      dplyr::filter(region == !!region) %>%
+      dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))%>%
+      dplyr::filter(!is.na(year))
+  } else {
+    future <- NULL
+  }
   ## 3.) check introduction
   ## merge data source and user specified introduction dates
   ## NA introduction will be replaced by input$src$historical
@@ -139,12 +144,14 @@ vac_sce <- function(input){
   ## scale routine coverage back by proportion risk
   historic <- historic %>%
     dplyr::mutate(coverage =
-             dplyr::case_when(activity_type == "routine" ~ coverage/input$params$proportion_risk,
-                              TRUE ~ coverage))
-  future <- future %>%
-    dplyr::mutate(coverage =
-             dplyr::case_when(activity_type == "routine" ~ coverage/input$params$proportion_risk,
-                              TRUE ~ coverage))
+                    dplyr::case_when(activity_type == "routine" ~ coverage/input$params$proportion_risk,
+                                     TRUE ~ coverage))
+  if(!is.null(future)){
+    future <- future %>%
+      dplyr::mutate(coverage =
+                      dplyr::case_when(activity_type == "routine" ~ coverage/input$params$proportion_risk,
+                                       TRUE ~ coverage))
+  }
 
   dat <- NULL
   for(i in seq_len(x)){
@@ -152,8 +159,13 @@ vac_sce <- function(input){
     message(sprintf("projecting trajectory for %s %s", input$introduction$activity_type[i], input$introduction$vaccine[i]))
     d0 <- historic %>%
       dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
-    d1 <- future %>%
-      dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
+    if(!is.null(future)){
+      d1 <- future %>%
+        dplyr::right_join(input$introduction[i, c("vaccine", "activity_type")], by = c("vaccine", "activity_type") )
+    } else {
+      d1 <- NULL
+    }
+
     d <- d0 %>%
       dplyr::select(year, coverage, age_from, age_to, gender) %>%
       dplyr::filter(!is.na(year)) %>%
