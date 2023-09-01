@@ -186,7 +186,7 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
     } else if(b$coverage[b$year == i] >= 0.8 & b$coverage[b$year == i] < 0.95){
       i <- i + 4
     } else if(b$coverage[b$year == i] >= 0.6 & b$coverage[b$year == i] < 0.8){
-      i <- i +3
+      i <- i + 3
     } else {
       i <- year_to
     }

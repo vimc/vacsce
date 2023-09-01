@@ -30,8 +30,7 @@ input_check <- function(input){
   ## arrange introduction and projection rules, so that campaign is the last one - because campaign is frequently dependent on routine levels
   introduction <- input$params$introduction %>%
     dplyr::mutate(index = seq_along(vaccine)) %>%
-    dplyr::arrange(desc(activity_type)) %>%
-    dplyr::mutate(index2 = seq_along(vaccine) )
+    dplyr::arrange(desc(activity_type), vaccine)
 
   if(nrow(introduction) != length(input$proj_rul)){
     txt <- "The number of vaccine delivery (input$params$introduction) and projection rules (input$proj_rul) do not match."
@@ -65,6 +64,7 @@ input_check <- function(input){
   } else {
     future <- NULL
   }
+
   ## 3.) check introduction
   ## merge data source and user specified introduction dates
   ## NA introduction will be replaced by input$src$historical
@@ -88,7 +88,8 @@ input_check <- function(input){
                       case_when(is.na(year_intro) ~ year_intro_src,
                                 TRUE ~ year_intro)) %>%
       dplyr::select(vaccine, activity_type, year_intro, conflict) %>%
-      dplyr::mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur)
+      dplyr::mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur) %>%
+      dplyr::arrange(desc(activity_type), vaccine)
     input$historic <- historic %>%
       dplyr::right_join(input$introduction %>%
                           dplyr::filter(!future_introduction & !conflict),
@@ -96,7 +97,7 @@ input_check <- function(input){
       dplyr::select(-year_intro, - future_introduction, -conflict)
   } else {
     input$historic <- historic
-    input$introduction <- input$params$introduction
+    input$introduction <- introduction
     message("No historical routine data identified.")
   }
 
@@ -145,11 +146,17 @@ vac_sce <- function(input){
   historic <- historic %>%
     dplyr::mutate(coverage =
                     dplyr::case_when(activity_type == "routine" ~ coverage/input$params$proportion_risk,
+                                     TRUE ~ coverage)) %>%
+    dplyr::mutate(coverage =
+                    dplyr::case_when(coverage > 1 ~ 1-1.e-12,
                                      TRUE ~ coverage))
   if(!is.null(future)){
     future <- future %>%
       dplyr::mutate(coverage =
                       dplyr::case_when(activity_type == "routine" ~ coverage/input$params$proportion_risk,
+                                       TRUE ~ coverage))%>%
+      dplyr::mutate(coverage =
+                      dplyr::case_when(coverage > 1 ~ 1,
                                        TRUE ~ coverage))
   }
 
