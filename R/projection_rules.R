@@ -202,7 +202,7 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
                   gender = gender)
 
   dat <- dplyr::bind_rows(d, t) %>%
-    filter(year < year_to)
+    filter(year <= year_to)
   return(dat)
 }
 

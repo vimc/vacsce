@@ -77,7 +77,7 @@ test_that("sia_follow_up", {
                   age_from = 1,
                   age_to = 15)
 
-  expect_equal(c(2020, 2024, 2028),
+  expect_equal(c(2020, 2024),
                sia_follow_up(dd, dat, vaccine_base = "A", year_current = 2021, year_to = 2025)[["year"]],
                ignore_attr = TRUE)
 
