@@ -20,20 +20,21 @@ Imports:
     magrittr,
     rlang,
     RPostgres,
-    vaultr
+    vaultr,
+    vimpact,
+    devtools
 Suggests:
-    fakerbase,
     ggplot2,
     htmltools,
     knitr,
     mockery,
-    mockr,
     testthat,
     retry,
     rmarkdown,
     RSQLite,
-    withr
-Remotes: reside-ic/fakerbase
+    withr,
+    kableExtra
+Remotes: reside-ic
 RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 Config/testthat/edition: 3

@@ -93,7 +93,7 @@ input_check <- function(input){
     input$historic <- historic %>%
       dplyr::right_join(input$introduction %>%
                           dplyr::filter(!future_introduction & !conflict),
-                        by = join_by("vaccine", "activity_type")) %>%
+                        by = c("vaccine", "activity_type")) %>%
       dplyr::select(-year_intro, - future_introduction, -conflict)
   } else {
     input$historic <- historic

@@ -33,7 +33,7 @@ keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = 
 #' @param year_from year from
 #' @param year_to year to
 #' @param step incremental level, e.g. 1% annual increase
-#' @param cap threshold capping coverage, this will be replaced by historical peak in d if applicable
+#' @param cap threshold capping coverage, this will be replaced by historical peak in d if applicable, 95% by default
 #' @param gender 1 for both, 2 for males, 3 for females
 #' @param age_from age_from
 #' @param age_to age_to
@@ -201,8 +201,8 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
                   age_to = age_to,
                   gender = gender)
 
-  dat <- dplyr::bind_rows(d, t) %>%
-    filter(year <= year_to)
+  dat <- dplyr::bind_rows(d, t)  %>%
+    dplyr::filter(year <= year_to)
   return(dat)
 }
 

@@ -17,10 +17,10 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup, include = FALSE}
-#library(vacsce)
+library("vacsce")
 library("vimpact")
 library("dplyr")
-devtools::load_all("../")
+#devtools::load_all("../")
 show_cols <- function(dat){
   kableExtra::kable(dat %>% 
                     dplyr::select(disease, vaccine, activity_type, region,
@@ -42,7 +42,7 @@ We provide an example input data set in this package. The example data set is us
 
 ```{r}
 # example coverage source data
-data <- system.file("example_data.csv", package = "vacsce", mustWork = TRUE)
+data <- read.csv(system.file("example_data.csv", package = "vacsce", mustWork = TRUE))
 # current year partitions historical and future coverage sources
 year_cur <- 2021
 # historical coverage data, for simplicity only use data from 2016

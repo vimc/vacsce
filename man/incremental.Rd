@@ -24,7 +24,7 @@ incremental(
 
 \item{step}{incremental level, e.g. 1% annual increase}
 
-\item{cap}{threshold capping coverage, this will be replaced by historical peak in d if applicable}
+\item{cap}{threshold capping coverage, this will be replaced by historical peak in d if applicable, 95% by default}
 
 \item{gender}{1 for both, 2 for males, 3 for females}
 
