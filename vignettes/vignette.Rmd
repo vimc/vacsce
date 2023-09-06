@@ -42,7 +42,7 @@ We provide an example input data set in this package. The example data set is us
 
 ```{r}
 # example coverage source data
-data <- read.csv("../inst/example_data.csv")
+data <- system.file("example_data.csv", package = "vacsce", mustWork = TRUE)
 # current year partitions historical and future coverage sources
 year_cur <- 2021
 # historical coverage data, for simplicity only use data from 2016
