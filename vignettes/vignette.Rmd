@@ -111,7 +111,7 @@ d <- his[his$vaccine == "MCV2",]
 
 We give an example where the rule is used for routine introduction. In this example, there is no historical MCV2 routine introduction, which indicats a future routine introduction. **catch_up_with_x** projects routine introduction in year `r year_cur + 3`. Coverage level increases non-linearly and reaches 85% in year `r year_cur + 6`. 85% represents coverage level (or up-/down-scaled level) of a certain vaccine in year `r year_cur + 6`. This coverage level multiply by factor **intro_level** determines the routine introduction coverage level of MCV2 in `r year_cur + 3`. 
 
-In the case where routine introduction has had happened. The projection rule will **non-linearly scale-up** to the target **vaccine_x_level** from **year_from-1**, hence one needs to make sure there is a coverage value in **year_from -1**. A message will show up saying that parameter **intro_level** is not applicable and not used. (N.B. **non-linearly scale-up** refers to the next generation rule to be introduced.)
+In the case where routine introduction has happened. The projection rule will **non-linearly scale-up** to the target **vaccine_x_level** from **year_from-1**, hence one needs to make sure there is a coverage value in **year_from -1**. A message will show up saying that parameter **intro_level** is not applicable and not used. (N.B. **non-linearly scale-up** refers to the next generation rule to be introduced.)
 
 ```{r}
 dat <- catch_up_with_x(d, year_from = year_cur + 3, 
