@@ -52,9 +52,6 @@ jobs:
           remotes::install_cran("covr")
         shell: Rscript {0}
 
-      - name: Start test DB
-        if: runner.os == 'Linux'
-        run: ./scripts/test_db_start.sh
 
       - name: Test coverage
         run: |
