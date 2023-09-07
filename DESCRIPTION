@@ -21,7 +21,6 @@ Imports:
     rlang,
     RPostgres,
     vaultr,
-    vimpact,
     devtools
 Suggests:
     ggplot2,
@@ -31,7 +30,6 @@ Suggests:
     testthat,
     retry,
     rmarkdown,
-    RSQLite,
     withr,
     kableExtra
 Remotes: reside-ic
