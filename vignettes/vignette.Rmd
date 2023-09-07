@@ -23,7 +23,7 @@ library("dplyr")
 show_cols <- function(dat){
   kableExtra::kable(dat %>% 
                     dplyr::select(disease, vaccine, activity_type, region,
-                                  age_from, age_to, gender, year, coverage), 
+                                  age_from, age_to, gender, year, coverage, rule), 
                   digits = 3)
 }
 ```

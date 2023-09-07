@@ -247,7 +247,8 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
                       coverage = sia_level,
                       age_from = age_from,
                       age_to = age_to,
-                      gender = gender)
+                      gender = gender,
+                      rule = "sia_catch_up")
     } else {
       return(NULL)
     }
