@@ -7,10 +7,10 @@
 input_check(input)
 }
 \arguments{
-\item{input}{input - input parameters
+\item{input}{input for vacsce
 input is a list contains three objects - params, src and proj_rules
 params is a list (example below)
-<- list(country = "<country_code>",
+    list(country = "<country_code>",
         disease = "<disease_code>",
         proportion_risk = <proportion of at risk population>,
         year_cur = <current_year>, # separates historical data and future projection
@@ -18,7 +18,7 @@ params is a list (example below)
                                  activity_type = c("<activity_vaccine_1>", "<activity_vaccine_2>"),
                                  year_intro = c(<vaccine_1_introduction_year>, <vaccine_2_introduction_year>)))
 src is a list (example below)
-<- list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
+    list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
 coverage source data frame must contain columns below
 c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")}
 }

@@ -24,7 +24,7 @@ catch_up_with_x(
 
 \item{vaccine_x_level}{coverage level of the vaccine to catch up with in year_to}
 
-\item{intro_level}{determines coverage level in year_from at vaccine_x_level*intro_level}
+\item{intro_level}{determines coverage level in year_from at vaccine_x_level*intro_level, 33 percent by default}
 
 \item{gender}{1 for both, 2 for males, 3 for females}
 
