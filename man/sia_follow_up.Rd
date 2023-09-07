@@ -2,9 +2,7 @@
 % Please edit documentation in R/projection_rules.R
 \name{sia_follow_up}
 \alias{sia_follow_up}
-\title{campaign coverage projection rule - future follow-up campaigns
-this function is designed under WHO M/MR guidance
-depending on the most recent campaign, routine introduction date and routine coverage level of vaccine_base}
+\title{Project future follow-up campaigns}
 \usage{
 sia_follow_up(
   d,

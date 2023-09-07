@@ -2,7 +2,7 @@
 % Please edit documentation in R/general.R
 \name{input_check}
 \alias{input_check}
-\title{saninty check for input date}
+\title{Sanity check for input}
 \usage{
 input_check(input)
 }

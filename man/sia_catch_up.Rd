@@ -2,7 +2,7 @@
 % Please edit documentation in R/projection_rules.R
 \name{sia_catch_up}
 \alias{sia_catch_up}
-\title{campaign coverage projection rule - one-off catch-up campaigns, specifically initial catch-up and mini-catch-up that targets missing cohorts}
+\title{Project catch-up campaign}
 \usage{
 sia_catch_up(d, dat, vaccine_base, sia_level, age_from, age_to, gender)
 }

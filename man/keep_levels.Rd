@@ -2,7 +2,7 @@
 % Please edit documentation in R/projection_rules.R
 \name{keep_levels}
 \alias{keep_levels}
-\title{routine coverage projection rule - keep future coverage at certain level}
+\title{Keep future coverage at certain level}
 \usage{
 keep_levels(
   d,

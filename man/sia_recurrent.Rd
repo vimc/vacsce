@@ -2,7 +2,7 @@
 % Please edit documentation in R/projection_rules.R
 \name{sia_recurrent}
 \alias{sia_recurrent}
-\title{campaign coverage projection rule - recurrent campaigns, e.g. cholera}
+\title{Project recurrent campaigns}
 \usage{
 sia_recurrent(
   d,

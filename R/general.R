@@ -1,20 +1,21 @@
-#' saninty check for input date
-#' @param input
-#' input - input parameters
-#' input is a list contains three objects - params, src and proj_rules
-#' params is a list (example below)
-#' <- list(country = "<country_code>",
-#'         disease = "<disease_code>",
-#'         proportion_risk = <proportion of at risk population>,
-#'         year_cur = <current_year>, # separates historical data and future projection
-#'         introduction = data.frame(vaccine = c("<vaccine_1>", "<vaccine_2>"),
-#'                                  activity_type = c("<activity_vaccine_1>", "<activity_vaccine_2>"),
-#'                                  year_intro = c(<vaccine_1_introduction_year>, <vaccine_2_introduction_year>)))
-#' src is a list (example below)
-#' <- list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
-#' coverage source data frame must contain columns below
-#' c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
-#' @export
+##' saninty check for input date
+##' @title Sanity check for input
+##' @param input
+##' input - input parameters
+##' input is a list contains three objects - params, src and proj_rules
+##' params is a list (example below)
+##' <- list(country = "<country_code>",
+##'         disease = "<disease_code>",
+##'         proportion_risk = <proportion of at risk population>,
+##'         year_cur = <current_year>, # separates historical data and future projection
+##'         introduction = data.frame(vaccine = c("<vaccine_1>", "<vaccine_2>"),
+##'                                  activity_type = c("<activity_vaccine_1>", "<activity_vaccine_2>"),
+##'                                  year_intro = c(<vaccine_1_introduction_year>, <vaccine_2_introduction_year>)))
+##' src is a list (example below)
+##' <- list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
+##' coverage source data frame must contain columns below
+##' c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
+##' @export
 input_check <- function(input){
   ## saninty check for input
   ## 1.) check input$params
@@ -30,7 +31,7 @@ input_check <- function(input){
   ## arrange introduction and projection rules, so that campaign is the last one - because campaign is frequently dependent on routine levels
   introduction <- input$params$introduction %>%
     dplyr::mutate(index = seq_along(vaccine)) %>%
-    dplyr::arrange(desc(activity_type), vaccine)
+    dplyr::arrange(dplyr::desc(activity_type), vaccine)
 
   if(nrow(introduction) != length(input$proj_rul)){
     txt <- "The number of vaccine delivery (input$params$introduction) and projection rules (input$proj_rul) do not match."
@@ -54,12 +55,12 @@ input_check <- function(input){
   ## filter data by params specified
   historic <-  input$src$historic %>%
     dplyr::filter(region == !!region) %>%
-    dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type")) %>%
+    dplyr::right_join(introduction %>% dplyr::select(-year_intro), by = c("vaccine", "activity_type")) %>%
     dplyr::filter(!is.na(year))
   if(!is.null(input$src$future)){
     future <-  input$src$future %>%
       dplyr::filter(region == !!region) %>%
-      dplyr::right_join(introduction %>% select(-year_intro), by = c("vaccine", "activity_type"))%>%
+      dplyr::right_join(introduction %>% dplyr::select(-year_intro), by = c("vaccine", "activity_type"))%>%
       dplyr::filter(!is.na(year))
   } else {
     future <- NULL
@@ -70,7 +71,8 @@ input_check <- function(input){
   ## NA introduction will be replaced by input$src$historical
   ## non-NA introduction will over-write input$src$historical
   if (nrow(historic[historic$activity_type != "campaign", ]) > 0){
-    s <- historic %>% group_by(vaccine, activity_type) %>%
+    s <- historic %>%
+      dplyr::group_by(vaccine, activity_type) %>%
       dplyr::filter(activity_type != "campaign") %>%
       dplyr::summarise(year_intro_src = min(year), .groups = "keep") %>%
       as.data.frame() %>%
@@ -85,11 +87,11 @@ input_check <- function(input){
     }
     input$introduction <- s %>%
       dplyr::mutate(year_intro =
-                      case_when(is.na(year_intro) ~ year_intro_src,
+                      dplyr::case_when(is.na(year_intro) ~ year_intro_src,
                                 TRUE ~ year_intro)) %>%
       dplyr::select(vaccine, activity_type, year_intro, conflict) %>%
       dplyr::mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur) %>%
-      dplyr::arrange(desc(activity_type), vaccine)
+      dplyr::arrange(dplyr::desc(activity_type), vaccine)
     input$historic <- historic %>%
       dplyr::right_join(input$introduction %>%
                           dplyr::filter(!future_introduction & !conflict),
@@ -129,10 +131,11 @@ input_check <- function(input){
   return(input)
 }
 
-#' generate vaccination scenario according to input
-#' @param input
-#' for details of setting up input, see input_check()
-#' @export
+##' generate vaccination scenario according to input
+##' @title Generate Vaccination Scenario
+##' @param input
+##' for details of setting up input, see input_check()
+##' @export
 vac_sce <- function(input){
   ## log scenario generation messages.
   input <- input_check(input)
@@ -249,6 +252,6 @@ generate_example_data <- function(con){
                              "AND year <= 2030"),
                        list(touch)) %>%
     dplyr::right_join(t, by = c("region", "vaccine", "activity_type")) %>%
-    dplyr::mutate(region = "ISO", target = NA, coverage = coverage * runif(1, 0.9,1.1))
+    dplyr::mutate(region = "ISO", target = NA, coverage = !!coverage * runif(1, 0.9,1.1))
   write.csv(d, "inst/example_data.csv", row.names = FALSE)
 }

@@ -2,8 +2,7 @@
 % Please edit documentation in R/projection_rules.R
 \name{catch_up_with_x}
 \alias{catch_up_with_x}
-\title{routine coverage projection rule - catch up with certain vaccine
-this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly}
+\title{Catch-up with focal vaccine}
 \usage{
 catch_up_with_x(
   d,
@@ -35,5 +34,4 @@ catch_up_with_x(
 }
 \description{
 routine coverage projection rule - catch up with certain vaccine
-this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly
 }

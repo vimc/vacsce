@@ -1,12 +1,13 @@
-#' routine coverage projection rule - keep future coverage at certain level
-#' @param d a data frame containing at least (year, coverage)
-#' @param year_from year from
-#' @param year_to year to
-#' @param level coverage level
-#' @param gender 1 for both, 2 for males, 3 for females
-#' @param age_from age_from
-#' @param age_to age_to
-#' @export
+##' routine coverage projection rule - keep future coverage at certain level
+##' @title Keep future coverage at certain level
+##' @param d a data frame containing at least (year, coverage)
+##' @param year_from year from
+##' @param year_to year to
+##' @param level coverage level
+##' @param gender 1 for both, 2 for males, 3 for females
+##' @param age_from age_from
+##' @param age_to age_to
+##' @export
 keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = NULL, age_to = NULL){
   t <- d[1, ] %>%
     dplyr::select(-year) %>%
@@ -28,16 +29,17 @@ keep_levels <- function(d, year_from, year_to, level, gender = NULL, age_from = 
   return(t)
 }
 
-#' routine coverage projection rule - annual incremental to certain threshold
-#' @param d a data frame containing at least (year, coverage)
-#' @param year_from year from
-#' @param year_to year to
-#' @param step incremental level, e.g. 1% annual increase
-#' @param cap threshold capping coverage, this will be replaced by historical peak in d if applicable, 95% by default
-#' @param gender 1 for both, 2 for males, 3 for females
-#' @param age_from age_from
-#' @param age_to age_to
-#' @export
+##' routine coverage projection rule - annual incremental to certain threshold
+##' @title Incremental with fixed step
+##' @param d a data frame containing at least (year, coverage)
+##' @param year_from year from
+##' @param year_to year to
+##' @param step incremental step, e.g. 1 percent annual increase
+##' @param cap threshold capping coverage, this will be replaced by historical peak in d if applicable, 95 percent by default
+##' @param gender 1 for both, 2 for males, 3 for females
+##' @param age_from age_from
+##' @param age_to age_to
+##' @export
 incremental <- function(d, year_from, year_to, step, cap = 0.95, gender = NULL, age_from = NULL, age_to = NULL){
   max_y <- max(d$year)
   t <- d[d$year == max_y, ] %>% # this is just to grab one row in source data for information like region, vaccine, activity_type, age groups, etc.
@@ -62,17 +64,17 @@ incremental <- function(d, year_from, year_to, step, cap = 0.95, gender = NULL, 
   return(t)
 }
 
-#' routine coverage projection rule - catch up with certain vaccine
-#' this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly
-#' @param d a data frame containing at least (year, coverage)
-#' @param year_from year from
-#' @param year_to year to
-#' @param vaccine_x_level coverage level of the vaccine to catch up with in year_to
-#' @param intro_level determines coverage level in year_from at vaccine_x_level*intro_level
-#' @param gender 1 for both, 2 for males, 3 for females
-#' @param age_from age_from
-#' @param age_to age_to
-#' @export
+##' routine coverage projection rule - catch up with certain vaccine
+##' @title Catch-up with focal vaccine
+##' @param d a data frame containing at least (year, coverage)
+##' @param year_from year from
+##' @param year_to year to
+##' @param vaccine_x_level coverage level of the vaccine to catch up with in year_to
+##' @param intro_level determines coverage level in year_from at vaccine_x_level*intro_level
+##' @param gender 1 for both, 2 for males, 3 for females
+##' @param age_from age_from
+##' @param age_to age_to
+##' @export
 catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level = 1/3, gender = NULL, age_from = NULL, age_to = NULL){
   years <- seq(year_from, year_to, 1)
   cov <- rep(NA, length(years))
@@ -100,16 +102,16 @@ catch_up_with_x <- function(d, year_from, year_to, vaccine_x_level, intro_level 
   return(dat)
 }
 
-#' routine coverage projection rule -  ia2030 non-linear scale-up
-#' this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly
-#' @param d a data frame containing at least (year, coverage)
-#' @param year_from year from
-#' @param year_to year to
-#' @param endpoint coverage level in year_to
-#' @param gender 1 for both, 2 for males, 3 for females
-#' @param age_from age_from
-#' @param age_to age_to
-#' @export
+##' routine coverage projection rule -  ia2030 non-linear scale-up
+##' @title IA2030 non-liner scale-up
+##' @param d a data frame containing at least (year, coverage)
+##' @param year_from year from
+##' @param year_to year to
+##' @param endpoint coverage level in year_to
+##' @param gender 1 for both, 2 for males, 3 for females
+##' @param age_from age_from
+##' @param age_to age_to
+##' @export
 non_linear_scale_up <- function(d, year_from, year_to, endpoint, gender = NULL, age_from = NULL, age_to = NULL){
   years <- seq(year_from, year_to, 1)
   cov <- ia2030_projection(year_from-1, d$coverage[d$year == year_from -1], year_to, endpoint)
@@ -127,20 +129,21 @@ non_linear_scale_up <- function(d, year_from, year_to, endpoint, gender = NULL, 
   return(dat)
 }
 
-#' campaign coverage projection rule - future follow-up campaigns
-#' this function is designed under WHO M/MR guidance
-#' depending on the most recent campaign, routine introduction date and routine coverage level of vaccine_base
-#' @param d a data frame containing at least (year, coverage)
-#' @param dat data frame containing at least vaccine_base upto year_to
-#' @param vaccine_base vaccine to be dependent on
-#' @param year_current year current
-#' @param year_to year to
-#' @param look_back evaluate follow-up sia frequency from year_current - look_back
-#' @param sia_level campaign coverage level
-#' @param age_from campaign target age from
-#' @param age_to campaign target age to
-#' @param  gender 1 for both, 2 for males, 3 for females
-#' @export
+##' campaign coverage projection rule - future follow-up campaigns
+##' this function is designed under WHO M/MR guidance
+##' depending on the most recent campaign, routine introduction date and routine coverage level of vaccine_base
+##' @title Project future follow-up campaigns
+##' @param d a data frame containing at least (year, coverage)
+##' @param dat data frame containing at least vaccine_base upto year_to
+##' @param vaccine_base vaccine to be dependent on
+##' @param year_current year current
+##' @param year_to year to
+##' @param look_back evaluate follow-up sia frequency from year_current - look_back
+##' @param sia_level campaign coverage level
+##' @param age_from campaign target age from
+##' @param age_to campaign target age to
+##' @param  gender 1 for both, 2 for males, 3 for females
+##' @export
 sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back = 4, sia_level = 0.9, age_from = 1, age_to = 5, gender = 1){
   ## vaccine_base is a baseline vaccine for evaluating follow-up campaign frequency
   ## evaluate vaccine_base levels from a baseline year
@@ -206,15 +209,16 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
   return(dat)
 }
 
-#' campaign coverage projection rule - one-off catch-up campaigns, specifically initial catch-up and mini-catch-up that targets missing cohorts
-#' @param d a data frame containing at least (year, coverage)
-#' @param dat data frame containing at least vaccine_base upto year_to
-#' @param vaccine_base vaccine to be dependent on
-#' @param sia_level campaign coverage level
-#' @param age_from campaign target age from
-#' @param age_to campaign target age to
-#' @param gender 1 for both, 2 for males, 3 for females
-#' @export
+##' campaign coverage projection rule - one-off catch-up campaigns, specifically initial catch-up and mini-catch-up that targets missing cohorts
+##' @title Project catch-up campaign
+##' @param d a data frame containing at least (year, coverage)
+##' @param dat data frame containing at least vaccine_base upto year_to
+##' @param vaccine_base vaccine to be dependent on
+##' @param sia_level campaign coverage level
+##' @param age_from campaign target age from
+##' @param age_to campaign target age to
+##' @param gender 1 for both, 2 for males, 3 for females
+##' @export
 sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gender){
   ## this is relevant to MenA, Typhoid, and HPV mult-cohort SIAs before routine introduction
   ## we need are year_intro and age groups
@@ -257,17 +261,18 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
   return(dat)
 }
 
-#' campaign coverage projection rule - recurrent campaigns, e.g. cholera
-#' @param d a data frame containing at least (year, coverage)
-#' @param dat Not used. It is just here for maintaining consistent campaign projection structure
-#' @param year_from year from
-#' @param year_to year to
-#' @param frequency sia frequency
-#' @param sia_level campaign coverage level
-#' @param age_from campaign target age from
-#' @param age_to campaign target age to
-#' @param  gender 1 for both, 2 for males, 3 for females
-#' @export
+##' campaign coverage projection rule - recurrent campaigns, e.g. cholera
+##' @title Project recurrent campaigns
+##' @param d a data frame containing at least (year, coverage)
+##' @param dat Not used. It is just here for maintaining consistent campaign projection structure
+##' @param year_from year from
+##' @param year_to year to
+##' @param frequency sia frequency
+##' @param sia_level campaign coverage level
+##' @param age_from campaign target age from
+##' @param age_to campaign target age to
+##' @param  gender 1 for both, 2 for males, 3 for females
+##' @export
 sia_recurrent <- function(d, dat = NULL, year_from, year_to, frequency, sia_level, age_from, age_to, gender){
 
   if(nrow(d[d$activity_type == "campaign", ]) > 0){

@@ -2,8 +2,7 @@
 % Please edit documentation in R/projection_rules.R
 \name{non_linear_scale_up}
 \alias{non_linear_scale_up}
-\title{routine coverage projection rule -  ia2030 non-linear scale-up
-this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly}
+\title{IA2030 non-liner scale-up}
 \usage{
 non_linear_scale_up(
   d,
@@ -32,5 +31,4 @@ non_linear_scale_up(
 }
 \description{
 routine coverage projection rule -  ia2030 non-linear scale-up
-this is specifically for routine intro (no historical data, i.e. nrow(d) == 0), but can be used flexibly
 }

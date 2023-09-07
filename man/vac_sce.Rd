@@ -2,7 +2,7 @@
 % Please edit documentation in R/general.R
 \name{vac_sce}
 \alias{vac_sce}
-\title{generate vaccination scenario according to input}
+\title{Generate Vaccination Scenario}
 \usage{
 vac_sce(input)
 }
