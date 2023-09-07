@@ -1,10 +1,9 @@
 ##' saninty check for input date
 ##' @title Sanity check for input
-##' @param input
-##' input - input parameters
+##' @param input input for vacsce
 ##' input is a list contains three objects - params, src and proj_rules
 ##' params is a list (example below)
-##' <- list(country = "<country_code>",
+##'     list(country = "<country_code>",
 ##'         disease = "<disease_code>",
 ##'         proportion_risk = <proportion of at risk population>,
 ##'         year_cur = <current_year>, # separates historical data and future projection
@@ -12,7 +11,7 @@
 ##'                                  activity_type = c("<activity_vaccine_1>", "<activity_vaccine_2>"),
 ##'                                  year_intro = c(<vaccine_1_introduction_year>, <vaccine_2_introduction_year>)))
 ##' src is a list (example below)
-##' <- list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
+##'     list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
 ##' coverage source data frame must contain columns below
 ##' c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
 ##' @export
@@ -203,9 +202,6 @@ vac_sce <- function(input){
         func <- paste0(names(r[j]), sub("list\\(", "(d, dat, ", paste(r[j])))
         func <- gsub('\"', "'", func, fixed = TRUE)
         message(func)
-        # dat <- eval(parse(text = func)) %>%
-        #   dplyr::bind_cols(input$introduction[i, c("vaccine", "activity_type")]) %>%
-        #   dplyr::bind_rows(dat)
         d <- eval(parse(text = func))
       }
       dat <- d %>%
@@ -224,34 +220,3 @@ vac_sce <- function(input){
 
   return(dat)
 }
-
-# ## extract example data
-# ## this function generates example data for package users
-# ## it needs run once and return a csv data frame
-# generate_example_data <- function(con){
-#   touch <- vimpact::get_touchstone(con, "202210covidimpact")
-#
-#   # extract data from montagu
-#   # examples I want to include are
-#   # measles: past mcv1 intro, future mcv2 intro + follow-up sias
-#   # hpv: catch-up + future routine intro
-#   # mena: catch-up + mini-catch-up + future routine intro
-#   # anonymous region
-#   # region are shown as integers, which are country.nid in montagu database
-#   t <- data.frame(region = c(324, 324, 324, 50, 50, 108, 108),
-#                   disease =  c("Measles", "Measles", "Measles", "HPV", "HPV", "MenA", "MenA"),
-#                   vaccine = c("MCV1", "MCV2", "Measles", "HPV", "HPV", "MenA", "MenA"),
-#                   activity_type = c("routine", "routine", "campaign", "campaign", "routine", "campaign", "routine"))
-#   d <- DBI::dbGetQuery(con,
-#                        paste("SELECT country.nid AS region, vaccine, activity_type, year, age_from, age_to, gender, target, coverage",
-#                              "FROM coverage_set JOIN coverage ON coverage.coverage_set = coverage_set.id",
-#                              "JOIN country ON country.id = coverage.country",
-#                              "WHERE touchstone = $1",
-#                              "And coverage_set.name LIKE '%default_nocovid%'",
-#                              "AND coverage > 0",
-#                              "AND year <= 2030"),
-#                        list(touch)) %>%
-#     dplyr::right_join(t, by = c("region", "vaccine", "activity_type")) %>%
-#     dplyr::mutate(region = "ISO", target = NA, coverage = !!coverage * runif(1, 0.9,1.1))
-#   write.csv(d, "inst/example_data.csv", row.names = FALSE)
-# }
