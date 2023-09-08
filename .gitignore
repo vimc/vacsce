@@ -1,0 +1,8 @@
+docs
+.Rproj.user
+.Rhistory
+.RData
+.Renviron
+.DS_Store
+vignettes_src/*.md
+vignettes_src/*.html

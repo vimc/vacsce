@@ -1,0 +1,31 @@
+# ## extract example data
+# ## this function generates example data for package users
+# ## it needs run once and return a csv data frame
+# ## The function is commented out. Only keep it here for reference.
+# generate_example_data <- function(con){
+#   touch <- vimpact::get_touchstone(con, "202210covidimpact")
+#
+#   # extract data from montagu
+#   # examples I want to include are
+#   # measles: past mcv1 intro, future mcv2 intro + follow-up sias
+#   # hpv: catch-up + future routine intro
+#   # mena: catch-up + mini-catch-up + future routine intro
+#   # anonymous region
+#   # region are shown as integers, which are country.nid in montagu database
+#   t <- data.frame(region = c(324, 324, 324, 50, 50, 108, 108),
+#                   disease =  c("Measles", "Measles", "Measles", "HPV", "HPV", "MenA", "MenA"),
+#                   vaccine = c("MCV1", "MCV2", "Measles", "HPV", "HPV", "MenA", "MenA"),
+#                   activity_type = c("routine", "routine", "campaign", "campaign", "routine", "campaign", "routine"))
+#   d <- DBI::dbGetQuery(con,
+#                        paste("SELECT country.nid AS region, vaccine, activity_type, year, age_from, age_to, gender, target, coverage",
+#                              "FROM coverage_set JOIN coverage ON coverage.coverage_set = coverage_set.id",
+#                              "JOIN country ON country.id = coverage.country",
+#                              "WHERE touchstone = $1",
+#                              "And coverage_set.name LIKE '%default_nocovid%'",
+#                              "AND coverage > 0",
+#                              "AND year <= 2030"),
+#                        list(touch)) %>%
+#     dplyr::right_join(t, by = c("region", "vaccine", "activity_type")) %>%
+#     dplyr::mutate(region = "ISO", target = NA, coverage = !!coverage * runif(1, 0.9,1.1))
+#   write.csv(d, "inst/example_data.csv", row.names = FALSE)
+# }
