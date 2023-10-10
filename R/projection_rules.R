@@ -163,19 +163,19 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
 
   ## determine baseline year
   b <- dat[dat$vaccine == vaccine_base, ]
-  y_int <- min(b$year)
+  y_intro <- min(b$year)
   y_current <- year_current
 
   if(nrow(d) == 0L){
-    y_base <- max(y_int, y_current)
+    y_base <- max(y_intro, y_current)
   } else {
     y_last_sia <- max(d$year)
     if(y_last_sia < y_current - look_back){
-      y_base <- max(y_int, y_current)
-    } else if(y_last_sia > y_current - look_back & y_last_sia >= y_int){
+      y_base <- max(y_intro, y_current)
+    } else if(y_last_sia >= y_current - look_back & y_last_sia >= y_intro){
       y_base <- y_last_sia
     } else {
-      y_base <- y_int
+      y_base <- y_intro
     }
   }
 
@@ -185,26 +185,29 @@ sia_follow_up <- function(d, dat, vaccine_base, year_current, year_to, look_back
   while (i < year_to) {
     ## evaluate vaccine_base, and determine next sia year
     if(b$coverage[b$year == i] < 0.6){
-      i <- i + 2
+      s <- 2
     } else if(b$coverage[b$year == i] >= 0.8 & b$coverage[b$year == i] < 0.95){
-      i <- i + 4
+      s <- 4
     } else if(b$coverage[b$year == i] >= 0.6 & b$coverage[b$year == i] < 0.8){
-      i <- i + 3
+      s <- 3
     } else {
-      i <- year_to
+      s <- 5
     }
-    if (i < y_current){
-      i <- y_current + 1
+    i <- ifelse(i + s <= y_current, y_current + 1, i + s)
+    if(s %in% 2:4){
+      year <- c(year, i)
     }
-    year <- c(year, i)
   }
-  t <- data.frame(year = year,
-                  coverage = sia_level,
-                  age_from = age_from,
-                  age_to = age_to,
-                  gender = gender,
-                  rule = "sia_follow_up")
-
+  if(!is.null(year)){
+    t <- data.frame(year = year,
+                    coverage = sia_level,
+                    age_from = age_from,
+                    age_to = age_to,
+                    gender = gender,
+                    rule = "sia_follow_up")
+  } else {
+    t <- NULL
+  }
   dat <- dplyr::bind_rows(d, t)  %>%
     dplyr::filter(year <= year_to)
   return(dat)
@@ -250,7 +253,7 @@ sia_catch_up <- function(d, dat, vaccine_base, sia_level, age_from, age_to, gend
                       gender = gender,
                       rule = "sia_catch_up")
     } else {
-      return(NULL)
+      t <- NULL
     }
   } else {
     t <- data.frame(year = year_intro,
