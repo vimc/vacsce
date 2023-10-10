@@ -4,7 +4,7 @@
 \alias{input_check}
 \title{Sanity check for input}
 \usage{
-input_check(input)
+input_check(input, key_cols)
 }
 \arguments{
 \item{input}{input for vacsce
@@ -18,9 +18,9 @@ params is a list (example below)
                                  activity_type = c("<activity_vaccine_1>", "<activity_vaccine_2>"),
                                  year_intro = c(<vaccine_1_introduction_year>, <vaccine_2_introduction_year>)))
 src is a list (example below)
-    list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
-coverage source data frame must contain columns below
-c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")}
+    list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)}
+
+\item{key_cols}{Key columns in coverage data to maintain}
 }
 \description{
 saninty check for input date

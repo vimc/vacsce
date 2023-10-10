@@ -4,10 +4,17 @@
 \alias{vac_sce}
 \title{Generate Vaccination Scenario}
 \usage{
-vac_sce(input)
+vac_sce(
+  input,
+  key_cols = c("region", "vaccine", "activity_type", "year", "age_from", "age_to",
+    "gender", "target", "coverage", "proportion_risk")
+)
 }
 \arguments{
 \item{input}{for details of setting up input, see input_check()}
+
+\item{key_cols}{Key columns in coverage data to maintain
+by default key cols in coverage data include c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")}
 }
 \description{
 generate vaccination scenario according to input
