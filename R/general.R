@@ -12,10 +12,9 @@
 ##'                                  year_intro = c(<vaccine_1_introduction_year>, <vaccine_2_introduction_year>)))
 ##' src is a list (example below)
 ##'     list((historic = <data frame of historical coverage source>, future = <data frame of future coverage source>)
-##' coverage source data frame must contain columns below
-##' c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
+##' @param key_cols Key columns in coverage data to maintain
 ##' @export
-input_check <- function(input){
+input_check <- function(input, key_cols){
   ## saninty check for input
   ## 1.) check input$params
   region <- unique(input$params$region)
@@ -40,7 +39,6 @@ input_check <- function(input){
   input$proj_rul <- input$proj_rul[introduction$index]
 
   ## 2.) check input$src
-  key_cols <-  c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
   if(nrow(input$src$historic) > 0){
     assert_has_columns(input$src$historic, key_cols)
   }
@@ -87,7 +85,7 @@ input_check <- function(input){
     input$introduction <- s %>%
       dplyr::mutate(year_intro =
                       dplyr::case_when(is.na(year_intro) ~ year_intro_src,
-                                TRUE ~ year_intro)) %>%
+                                       TRUE ~ year_intro)) %>%
       dplyr::select(vaccine, activity_type, year_intro, conflict) %>%
       dplyr::mutate(future_introduction = !is.na(year_intro) & year_intro > year_cur) %>%
       dplyr::arrange(dplyr::desc(activity_type), vaccine)
@@ -134,10 +132,12 @@ input_check <- function(input){
 ##' @title Generate Vaccination Scenario
 ##' @param input
 ##' for details of setting up input, see input_check()
+##' @param key_cols Key columns in coverage data to maintain
+##' by default key cols in coverage data include c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")
 ##' @export
-vac_sce <- function(input){
+vac_sce <- function(input, key_cols = c("region", "vaccine", "activity_type", "year", "age_from", "age_to", "gender", "target", "coverage", "proportion_risk")){
   ## log scenario generation messages.
-  input <- input_check(input)
+  input <- input_check(input, key_cols)
   historic <- input$historic
   future <- input$future
   x <- nrow(input$introduction)
@@ -176,7 +176,8 @@ vac_sce <- function(input){
     }
 
     d <- d0 %>%
-      dplyr::select(year, coverage, age_from, age_to, gender) %>%
+      #dplyr::select(year, coverage, age_from, age_to, gender, target) %>%
+      dplyr::select(-region, -vaccine, -activity_type) %>%
       dplyr::filter(!is.na(year)) %>%
       dplyr::arrange(year)
     r <- input$proj_rul[[i]] # projection rules

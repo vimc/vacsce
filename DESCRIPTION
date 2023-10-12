@@ -1,6 +1,6 @@
 Package: vacsce
 Title: Vaccine coverage scenario generator
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     c(person(given = "Xiang",
              family = "Li",
