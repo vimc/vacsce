@@ -182,7 +182,7 @@ vac_sce <- function(input, key_cols = c("region", "vaccine", "activity_type", "y
       dplyr::arrange(year)
     r <- input$proj_rul[[i]] # projection rules
 
-    if(!is.null(r) & input$introduction$activity_type[i] != "campaign"){
+    if(!is.null(unlist(r)) & input$introduction$activity_type[i] != "campaign"){
       ## this is routine projection only
       ## campaign may depend on routine projection
       ## hence need to be run separately
@@ -194,7 +194,7 @@ vac_sce <- function(input, key_cols = c("region", "vaccine", "activity_type", "y
       dat <- d %>%
         dplyr::bind_cols(input$introduction[i, c("vaccine", "activity_type")]) %>%
         dplyr::bind_rows(dat)
-    } else if(is.null(r)){
+    } else if(is.null(unlist(r))){
       message("No projection. Binding data from source coverage.")
       dat <- dplyr::bind_rows(dat, d0, d1)
     } else {
